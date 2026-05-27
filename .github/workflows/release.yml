@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - dev
+    paths-ignore:
+      - '.github/**'
+      - '*.md'
+      - 'README.html'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version from module.prop
+        id: version
+        run: |
+          VERSION=$(grep '^version=' module.prop | cut -d= -f2)
+          VERSION_CODE=$(grep '^versionCode=' module.prop | cut -d= -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "zip_name=acc-webui_${VERSION}_apatch.zip" >> $GITHUB_OUTPUT
+
+      - name: Build uninstaller zip
+        run: |
+          mkdir -p bin .tmp/META-INF/com/google/android
+          sed 's|#!/system/bin/sh|#!/sbin/sh|' install/uninstall.sh > .tmp/META-INF/com/google/android/update-binary
+          echo "#MAGISK" > .tmp/META-INF/com/google/android/updater-script
+          cd .tmp && zip -r9 ../bin/acc_flashable_uninstaller.zip * && cd ..
+          rm -rf .tmp
+
+      - name: Sync installer scripts
+        run: |
+          cp customize.sh install.sh
+          cp customize.sh META-INF/com/google/android/update-binary
+
+      - name: Build flashable zip
+        run: |
+          zip -r9 "${{ steps.version.outputs.zip_name }}" \
+            META-INF bin install module.prop module.json \
+            customize.sh install.sh install-online.sh install-tarball.sh \
+            License.md README.md README.html changelog.md
+
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: "${{ steps.version.outputs.version }} - APatch/FolkPatch Compatibility"
+          body: |
+            ## Changes
+            See [changelog](https://github.com/${{ github.repository }}/blob/dev/changelog.md) for details.
+
+            ## Supported Root Frameworks
+            - ✅ Magisk
+            - ✅ KernelSU
+            - ✅ APatch
+            - ✅ FolkPatch
+          files: ${{ steps.version.outputs.zip_name }}
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
