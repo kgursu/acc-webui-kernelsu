@@ -64,6 +64,11 @@ printf "\n\n\n" >> $TMPDIR/.scripts
 ! [[ "${chargingSwitch[*]}" != *\ -- && -z "$s0" && ".$pbim" != ".$prioritizeBattIdleMode" ]] || s=
 
 
+# ensure .config-ver exists (created by accd --init; may not exist yet on first run)
+[ -f $TMPDIR/.config-ver ] || sed -n '/^configVerCode=/s/.*=//p' $execDir/default-config.txt > $TMPDIR/.config-ver
+# ensure .config-help exists
+[ -f $TMPDIR/.config-help ] || sed -n '/^# /,$p' $execDir/default-config.txt > $TMPDIR/.config-help
+
 echo "configVerCode=$(cat $TMPDIR/.config-ver)
 
 allowIdleAbovePcap=${aiapc:-true}

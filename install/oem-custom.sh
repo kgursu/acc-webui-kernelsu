@@ -6,6 +6,8 @@ _is_board() { getprop ro.product.board | grep -Eiq "$1"; }
 # patch/reset [broken/obsolete] config
 if (set +x; . $config) >/dev/null 2>&1; then
   configVer=0$(_get_prop configVerCode)
+  # ensure .config-ver exists (created by accd --init; may not exist yet on first run)
+  [ -f $TMPDIR/.config-ver ] || sed -n '/^configVerCode=/s/.*=//p' $execDir/default-config.txt > $TMPDIR/.config-ver
   defaultConfVer=0$(cat $TMPDIR/.config-ver)
   [ $configVer -eq $defaultConfVer ] || {
     # if [ $configVer -lt 202404070 ]; then

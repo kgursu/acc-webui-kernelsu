@@ -7,211 +7,399 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Modern Loading overlay -->
+    <div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; flex-direction: column;">
+        <div style="text-align: center;">
+            <!-- Multi-color spinner -->
+            <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 30px;">
+                <div class="spinner" style="position: absolute; width: 100%; height: 100%; border: 4px solid transparent; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div class="spinner" style="position: absolute; width: 100%; height: 100%; border: 4px solid transparent; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1.5s linear infinite reverse; animation-delay: 0.2s;"></div>
+                <div class="spinner" style="position: absolute; width: 100%; height: 100%; border: 4px solid transparent; border-top: 4px solid #f59e0b; border-radius: 50%; animation: spin 2s linear infinite; animation-delay: 0.4s;"></div>
+            </div>
+            <h2 style="font-size: 24px; margin: 0; font-weight: 700; background: linear-gradient(135deg, #000000 0%, #495057 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Initializing ACC WebUI</h2>
+            <p style="font-size: 14px; color: #6c757d; margin-top: 12px; font-weight: 500;">Verifying system and loading components...</p>
+            <div style="margin-top: 20px; display: flex; gap: 8px; justify-content: center;">
+                <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite;"></div>
+                <div style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; animation-delay: 0.2s;"></div>
+                <div style="width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; animation-delay: 0.4s;"></div>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
-        <h1>ACC Daemon Controller</h1>
+        <h1>⚡ ACC Daemon Controller</h1>
         
         <div id="error-display" class="error-box" style="display: none;"></div>
         
-        <div class="card">
-            <h2>System Verification</h2>
-            <div id="verification-status">
-                <div class="status-item">
-                    <span class="status-key">Root Access:</span>
-                    <span class="status-value" id="root-status">Checking...</span>
+        <div class="main-tab-content">
+            <div id="status-tab" class="main-tab-pane active">
+                <div class="card">
+                    <h2>System Verification</h2>
+                    <div id="verification-status">
+                        <div class="status-item">
+                            <span class="status-key">Root Access:</span>
+                            <span class="status-value" id="root-status">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">ACC Installation:</span>
+                            <span class="status-value" id="acc-install-status">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">ACC Version:</span>
+                            <span class="status-value" id="acc-version">-</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="status-item">
-                    <span class="status-key">ACC Installation:</span>
-                    <span class="status-value" id="acc-install-status">Checking...</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">ACC Version:</span>
-                    <span class="status-value" id="acc-version">-</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card" id="control-panel" style="display: none;">
-            <h2>Current Status</h2>
-            <div id="status-display">
-                <div class="status-item">
-                    <span class="status-key">Daemon Status:</span>
-                    <span class="status-value" id="daemon-status">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Battery Level:</span>
-                    <span class="status-value" id="battery-level">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Charging Status:</span>
-                    <span class="status-value" id="charging-status">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Current Limit:</span>
-                    <span class="status-value" id="current-limit">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Voltage Limit:</span>
-                    <span class="status-value" id="voltage-limit">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Temperature:</span>
-                    <span class="status-value" id="temperature">-</span>
+                
+                <div class="card" id="control-panel" style="display: none;">
+                    <h2>Current Status</h2>
+                    <div id="status-display">
+                        <div class="status-item">
+                            <span class="status-key">Daemon Status:</span>
+                            <span class="status-value" id="daemon-status">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Battery Level:</span>
+                            <div class="battery-container">
+                                <div class="battery-bar" id="battery-bar"></div>
+                                <span class="status-value" id="battery-level">-</span>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Charging Status:</span>
+                            <span class="status-value" id="charging-status">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Current Limit:</span>
+                            <span class="status-value" id="current-limit">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Temperature:</span>
+                            <span class="status-value" id="temperature">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Power Consumption:</span>
+                            <span class="status-value" id="power-display">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Charge Type:</span>
+                            <span class="status-value" id="charge-type">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Real Battery Level:</span>
+                            <span class="status-value" id="real-level">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Battery Health:</span>
+                            <span class="status-value" id="battery-health">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="detailed-info-btn">Detailed Battery Info</button>
+                    </div>
+                    
+                    <div id="detailed-info-panel" class="detailed-info-panel" style="display: none;">
+                        <h3>Detailed Battery Information</h3>
+                        <div class="log-container" id="detailed-info-content">Loading...</div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="refresh-btn">Refresh Status</button>
+                        <button id="battery-health-btn">Battery Health</button>
+                        <button id="test-switches-btn">Test Switches</button>
+                        <button id="disable-charging-btn">Disable Charging</button>
+                        <button id="enable-charging-btn">Enable Charging</button>
+                        <button id="force-charge-btn">Force Charge</button>
+                        <button id="reset-battery-stats-btn">Reset Battery Stats</button>
+                        <button id="restart-btn">Restart Daemon</button>
+                        <button id="stop-btn">Stop Daemon</button>
+                        <button id="start-btn">Start Daemon</button>
+                    </div>
                 </div>
             </div>
             
-            <div class="button-group">
-                <button id="refresh-btn">Refresh Status</button>
-                <button id="restart-btn">Restart Daemon</button>
-                <button id="stop-btn">Stop Daemon</button>
-                <button id="start-btn">Start Daemon</button>
+            <div id="config-tab" class="main-tab-pane">
+                <div class="card" id="config-panel" style="display: none;">
+                    <h2>Configuration</h2>
+                    <div id="config-display">
+                        <div class="status-item">
+                            <span class="status-key">Charge Limit:</span>
+                            <span class="status-value" id="charge-limit">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Resume Charge:</span>
+                            <span class="status-value" id="resume-charge">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-key">Pause at:</span>
+                            <span class="status-value" id="pause-at">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="logs-tab" class="main-tab-pane">
+                <div class="card" id="log-panel" style="display: none;">
+                    <h2>Recent Logs</h2>
+                    <div class="log-container" id="log-display">Loading logs...</div>
+                    <div class="button-group">
+                        <button id="refresh-logs-btn">Refresh Logs</button>
+                        <button id="export-logs-btn">Export Logs</button>
+                        <button id="clear-logs-btn">Clear Logs</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="maintenance-tab" class="main-tab-pane">
+                <div class="card" id="maintenance-panel" style="display: none;">
+                    <h2>Maintenance</h2>
+                    <div class="button-group">
+                        <button id="upgrade-btn">Check for Updates</button>
+                        <button id="uninstall-btn">Uninstall ACC</button>
+                        <button id="rollback-btn">Rollback</button>
+                        <button id="version-btn">Show Version</button>
+                        <button id="readme-btn">Open Manual</button>
+                        <button id="logtail-btn">Log Monitor</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="settings-tab" class="main-tab-pane">
+                <div class="card" id="settings-panel" style="display: none;">
+                    <h2>Configuration Settings</h2>
+                    
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="basic-settings">Basic</button>
+                        <button class="tab-button" data-tab="limits-settings">Limits</button>
+                        <button class="tab-button" data-tab="advanced-settings">Advanced</button>
+                        <button class="tab-button" data-tab="cooldown-settings">Cooldown</button>
+                        <button class="tab-button" data-tab="ui-settings">UI</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <div id="basic-settings" class="tab-pane active">
+                            <div class="config-item">
+                                <label for="pause-capacity">Pause Capacity (%):</label>
+                                <input type="number" id="pause-capacity" min="0" max="100" step="1">
+                            </div>
+                            <div class="config-item">
+                                <label for="resume-capacity">Resume Capacity (%):</label>
+                                <input type="number" id="resume-capacity" min="0" max="100" step="1">
+                            </div>
+                            <div class="config-item">
+                                <label for="shutdown-capacity">Shutdown Capacity (%):</label>
+                                <input type="number" id="shutdown-capacity" min="0" max="100" step="1">
+                            </div>
+                            <div class="config-item">
+                                <label for="capacity-mask">Capacity Mask:</label>
+                                <select id="capacity-mask">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="limits-settings" class="tab-pane">
+                            <div class="config-item">
+                                <label for="max-current">Max Charging Current (mA):</label>
+                                <input type="number" id="max-current" min="0" max="9999" step="100">
+                            </div>
+                            <div class="config-item">
+                                <label for="max-voltage">Max Charging Voltage (mV):</label>
+                                <input type="number" id="max-voltage" min="3700" max="4300" step="50">
+                            </div>
+                            <div class="config-item">
+                                <label for="temp-level">Temperature Level (%):</label>
+                                <input type="number" id="temp-level" min="0" max="100" step="1">
+                            </div>
+                        </div>
+                        
+                        <div id="advanced-settings" class="tab-pane">
+                            <div class="config-item">
+                                <label for="charging-switch">Charging Switch:</label>
+                                <select id="charging-switch">
+                                    <option value="">Automatic</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="prioritize-idle">Prioritize Battery Idle Mode:</label>
+                                <select id="prioritize-idle">
+                                    <option value="true">Enabled</option>
+                                    <option value="false">Disabled</option>
+                                    <option value="no">No (opposite effect)</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="force-off">Force Off:</label>
+                                <select id="force-off">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="reboot-resume">Reboot Resume:</label>
+                                <select id="reboot-resume">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="reset-batt-stats-on-pause">Reset Stats on Pause:</label>
+                                <select id="reset-batt-stats-on-pause">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="reset-batt-stats-on-plug">Reset Stats on Plug:</label>
+                                <select id="reset-batt-stats-on-plug">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="reset-batt-stats-on-unplug">Reset Stats on Unplug:</label>
+                                <select id="reset-batt-stats-on-unplug">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="run-cmd-on-pause">Run Command on Pause:</label>
+                                <input type="text" id="run-cmd-on-pause" placeholder="Command to run when pausing">
+                            </div>
+                            <div class="config-item">
+                                <label for="apply-on-boot">Apply on Boot:</label>
+                                <textarea id="apply-on-boot" placeholder="Commands to run on boot" rows="3"></textarea>
+                            </div>
+                            <div class="config-item">
+                                <label for="apply-on-plug">Apply on Plug:</label>
+                                <textarea id="apply-on-plug" placeholder="Commands to run when plugged" rows="3"></textarea>
+                            </div>
+                            <div class="config-item">
+                                <label for="batt-status-override">Battery Status Override:</label>
+                                <select id="batt-status-override">
+                                    <option value="">None</option>
+                                    <option value="Idle">Idle</option>
+                                    <option value="Discharging">Discharging</option>
+                                </select>
+                            </div>
+                            <div class="config-item">
+                                <label for="idle-apps">Idle Apps:</label>
+                                <input type="text" id="idle-apps" placeholder="Comma-separated package names">
+                            </div>
+                        </div>
+                        
+                        <div id="cooldown-settings" class="tab-pane">
+                            <div class="config-item">
+                                <label for="cooldown-capacity">Cooldown Capacity (%):</label>
+                                <input type="number" id="cooldown-capacity" min="0" max="100" step="1">
+                            </div>
+                            <div class="config-item">
+                                <label for="cooldown-temp">Cooldown Temp (°C):</label>
+                                <input type="number" id="cooldown-temp" min="0" max="100" step="1">
+                            </div>
+                            <div class="config-item">
+                                <label for="cooldown-current">Cooldown Current (mA or %):</label>
+                                <input type="text" id="cooldown-current" placeholder="e.g., 500 or 50%">
+                            </div>
+                            <div class="config-item">
+                                <label for="cooldown-charge">Cooldown Charge (sec):</label>
+                                <input type="number" id="cooldown-charge" min="0" step="1">
+                            </div>
+                            <div class="config-item">
+                                <label for="cooldown-pause">Cooldown Pause (sec):</label>
+                                <input type="number" id="cooldown-pause" min="0" step="1">
+                            </div>
+                        </div>
+                        
+                        <div id="ui-settings" class="tab-pane">
+                            <div class="config-item">
+                                <label for="debug-mode-toggle">Enable Debug Console:</label>
+                                <select id="debug-mode-toggle">
+                                    <option value="false">Disabled</option>
+                                    <option value="true">Enabled</option>
+                                </select>
+                                <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
+                                    Show debug console on all pages for troubleshooting
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="load-config-btn">Load Current Config</button>
+                        <button id="save-config-btn">Save Configuration</button>
+                        <button id="save-profile-btn">Save as Profile</button>
+                        <button id="load-profile-btn">Load Profile</button>
+                        <button id="reset-config-btn">Reset to Defaults</button>
+                        <button id="test-functionality-btn">Test All Features</button>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <div class="card" id="config-panel" style="display: none;">
-            <h2>Configuration</h2>
-            <div id="config-display">
-                <div class="status-item">
-                    <span class="status-key">Charge Limit:</span>
-                    <span class="status-value" id="charge-limit">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Resume Charge:</span>
-                    <span class="status-value" id="resume-charge">-</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-key">Pause at:</span>
-                    <span class="status-value" id="pause-at">-</span>
-                </div>
-            </div>
+        <div class="bottom-nav">
+            <button class="nav-button active" data-main-tab="status-tab">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Status</span>
+            </button>
+            <button class="nav-button" data-main-tab="config-tab">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Config</span>
+            </button>
+            <button class="nav-button" data-main-tab="logs-tab">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">Logs</span>
+            </button>
+            <button class="nav-button" data-main-tab="maintenance-tab">
+                <span class="nav-icon">🔧</span>
+                <span class="nav-text">Maintenance</span>
+            </button>
+            <button class="nav-button" data-main-tab="settings-tab">
+                <span class="nav-icon">🛠️</span>
+                <span class="nav-text">Settings</span>
+            </button>
         </div>
-        
-        <div class="card" id="log-panel" style="display: none;">
-            <h2>Recent Logs</h2>
-            <div class="log-container" id="log-display">Loading logs...</div>
-            <div class="button-group">
-                <button id="refresh-logs-btn">Refresh Logs</button>
-                <button id="clear-logs-btn">Clear Logs</button>
-            </div>
-        </div>
-        
-        <!-- Optional debug panel - will be removed in stable release. -->
-        <div class="card" style="display: none;">
-            <h2>Debug Information</h2>
-            <div class="log-container" id="debug-console"></div>
-            <div class="debug-info">Last updated: <span id="last-updated">Never</span></div>
+
+        <div class="card" id="debug-console-card">
+            <h2>Debug Console</h2>
+            <div class="log-container" id="debug-console">Initializing...</div>
+            <div class="debug-info">Last updated: <span id="last-updated">-</span></div>
         </div>
 
     </div>
-<!-- Configuration Panel WIP -->
-<div class="card" id="settings-panel" style="display: none;">
-    <h2>Configuration Settings</h2>
-    
-    <div class="tab-buttons">
-        <button class="tab-button active" data-tab="basic-settings">Basic</button>
-        <button class="tab-button" data-tab="limits-settings">Limits</button>
-        <button class="tab-button" data-tab="advanced-settings">Advanced</button>
-        <button class="tab-button" data-tab="cooldown-settings">Cooldown</button>
+
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-help">&times;</span>
+            <h2>ACC Help</h2>
+            <pre id="help-content">Loading help...</pre>
+        </div>
     </div>
-    
-    <div class="tab-content">
-        <div id="basic-settings" class="tab-pane active">
-            <div class="config-item">
-                <label for="pause-capacity">Pause Capacity (%):</label>
-                <input type="number" id="pause-capacity" min="0" max="100" step="1">
-            </div>
-            <div class="config-item">
-                <label for="resume-capacity">Resume Capacity (%):</label>
-                <input type="number" id="resume-capacity" min="0" max="100" step="1">
-            </div>
-            <div class="config-item">
-                <label for="shutdown-capacity">Shutdown Capacity (%):</label>
-                <input type="number" id="shutdown-capacity" min="0" max="100" step="1">
-            </div>
-            <div class="config-item">
-                <label for="capacity-mask">Capacity Mask:</label>
-                <select id="capacity-mask">
-                    <option value="false">Disabled</option>
-                    <option value="true">Enabled</option>
-                </select>
-            </div>
+
+    <div id="readme-modal" class="modal">
+        <div class="modal-content large-modal">
+            <span class="close" id="close-readme">&times;</span>
+            <h2>ACC Manual</h2>
+            <div id="readme-content" style="max-height: 500px; overflow-y: auto;">Loading manual...</div>
         </div>
-        
-        <div id="limits-settings" class="tab-pane">
-            <div class="config-item">
-                <label for="max-current">Max Charging Current (mA):</label>
-                <input type="number" id="max-current" min="0" max="9999" step="100">
-            </div>
-            <div class="config-item">
-                <label for="max-voltage">Max Charging Voltage (mV):</label>
-                <input type="number" id="max-voltage" min="3700" max="4300" step="50">
-            </div>
-            <div class="config-item">
-                <label for="temp-level">Temperature Level (%):</label>
-                <input type="number" id="temp-level" min="0" max="100" step="1">
-            </div>
-        </div>
-        
-        <div id="advanced-settings" class="tab-pane">
-            <div class="config-item">
-                <label for="charging-switch">Charging Switch:</label>
-                <select id="charging-switch">
-                    <option value="">Automatic</option>
-                </select>
-            </div>
-            <div class="config-item">
-                <label for="prioritize-idle">Prioritize Battery Idle Mode:</label>
-                <select id="prioritize-idle">
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                    <option value="no">No (opposite effect)</option>
-                </select>
-            </div>
-            <div class="config-item">
-                <label for="force-off">Force Off:</label>
-                <select id="force-off">
-                    <option value="false">Disabled</option>
-                    <option value="true">Enabled</option>
-                </select>
-            </div>
-            <div class="config-item">
-                <label for="reboot-resume">Reboot Resume:</label>
-                <select id="reboot-resume">
-                    <option value="false">Disabled</option>
-                    <option value="true">Enabled</option>
-                </select>
-            </div>
-        </div>
-        
-        <div id="cooldown-settings" class="tab-pane">
-            <div class="config-item">
-                <label for="cooldown-capacity">Cooldown Capacity (%):</label>
-                <input type="number" id="cooldown-capacity" min="0" max="100" step="1">
-            </div>
-            <div class="config-item">
-                <label for="cooldown-temp">Cooldown Temp (°C):</label>
-                <input type="number" id="cooldown-temp" min="0" max="100" step="1">
-            </div>
-            <div class="config-item">
-                <label for="cooldown-current">Cooldown Current (mA or %):</label>
-                <input type="text" id="cooldown-current" placeholder="e.g., 500 or 50%">
-            </div>
-            <div class="config-item">
-                <label for="cooldown-charge">Cooldown Charge (sec):</label>
-                <input type="number" id="cooldown-charge" min="0" step="1">
-            </div>
-            <div class="config-item">
-                <label for="cooldown-pause">Cooldown Pause (sec):</label>
-                <input type="number" id="cooldown-pause" min="0" step="1">
+    </div>
+
+    <div id="test-switches-modal" class="modal">
+        <div class="modal-content large-modal">
+            <span class="close" id="close-test-switches">&times;</span>
+            <h2>Test Charging Switches</h2>
+            <div class="modal-body">
+                <div class="button-group">
+                    <button id="run-test-switches">Run Test</button>
+                    <button id="stop-test-switches" style="display: none;">Stop Test</button>
+                </div>
+                <pre id="test-switches-output" style="margin-top: 10px; max-height: 400px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; white-space: pre-wrap;"></pre>
             </div>
         </div>
     </div>
-    
-    <div class="button-group">
-        <button id="load-config-btn">Load Current Config</button>
-        <button id="save-config-btn">Save Configuration</button>
-        <button id="reset-config-btn">Reset to Defaults</button>
-    </div>
-</div>
     <script src="script.js"></script>
     <script src="config.js"></script>
 </body>
