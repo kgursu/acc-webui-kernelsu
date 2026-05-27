@@ -22,9 +22,22 @@ jobs:
         run: |
           VERSION=$(grep '^version=' module.prop | cut -d= -f2)
           VERSION_CODE=$(grep '^versionCode=' module.prop | cut -d= -f2)
+          ZIP_NAME="acc-webui_${VERSION}_apatch.zip"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "zip_name=acc-webui_${VERSION}_apatch.zip" >> $GITHUB_OUTPUT
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+          echo "zip_url=https://github.com/${{ github.repository }}/releases/download/${VERSION}/${ZIP_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Update module.json
+        run: |
+          cat > module.json << JSON
+          {
+              "version": "${{ steps.version.outputs.version }}",
+              "versionCode": ${{ steps.version.outputs.version_code }},
+              "zipUrl": "${{ steps.version.outputs.zip_url }}",
+              "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/dev/changelog.md"
+          }
+          JSON
 
       - name: Build uninstaller zip
         run: |
@@ -50,7 +63,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
-          name: "${{ steps.version.outputs.version }} - APatch/FolkPatch Compatibility"
+          name: "${{ steps.version.outputs.version }}"
           body: |
             ## Changes
             See [changelog](https://github.com/${{ github.repository }}/blob/dev/changelog.md) for details.

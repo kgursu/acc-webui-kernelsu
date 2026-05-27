@@ -1,11 +1,6 @@
 {
-    "busybox": "https://github.com/Magisk-Modules-Repo/busybox-ndk",
-    "changelog": "https://raw.githubusercontent.com/VR-25/acc/master/changelog.md",
-    "curl": "https://github.com/Zackptg5/Cross-Compiled-Binaries-Android/tree/master/curl",
-    "onlineInstaller": "https://github.com/VR-25/acc/releases/download/v2023.10.16/install-online.sh",
-    "tgz": "https://github.com/VR-25/acc/releases/download/v2023.10.16/acc_v2023.10.16_202310160.tgz",
-    "tgzInstaller": "https://github.com/VR-25/acc/releases/download/v2023.10.16/install-tarball.sh",
-    "version": "v2023.10.16",
-    "versionCode": 202310160,
-    "zipUrl": "https://github.com/VR-25/acc/releases/download/v2023.10.16/acc_v2023.10.16_202310160.zip"
+    "version": "v2025.5.18-dev-apatch-1.0",
+    "versionCode": 20260527,
+    "zipUrl": "https://github.com/kgursu/acc-webui-kernelsu/releases/download/v2025.5.18-dev-apatch-1.0/acc-webui_v2025.5.18-dev-apatch-1.0_apatch.zip",
+    "changelog": "https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/changelog.md"
 }
