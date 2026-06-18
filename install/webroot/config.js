@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function executeAccCommand(args = [], timeout = 5000) {
         const pathsToTry = [
             accPath,
+            '/data/adb/ap/bin/acc',        // APatch / FolkPatch
             '/data/adb/vr25/acc/acc',
             '/data/adb/modules/acc/acc',
             '/dev/acc',
@@ -333,20 +334,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 commands.push(`apply_on_plug=${document.getElementById('apply-on-plug').value}`);
             }
 
-            // Execute all commands
+            // Execute all commands; executeAccCommand rejects on non-zero exit
             for (const cmd of commands) {
-                await executeAccCommand(['-s', cmd]);
+                try {
+                    await executeAccCommand(['-s', cmd]);
+                } catch (e) {
+                    showError(`Failed to save: ${cmd}`);
+                    logManager.error(`Config save failed at "${cmd}": ${e}`);
+                    return;
+                }
             }
 
             logManager.info("Configuration saved");
             showError("Configuration saved successfully!");
             setTimeout(hideError, 3000);
 
-            // Restart accd to apply changes
+            // Restart accd - nohup+setsid prevents APatch/FolkPatch from killing it
             try {
-                await commandExecutor.exec('pkill', ['-f', 'accd']);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                await executeAccCommand(['--init']);
+                await commandExecutor.exec('su', ['-c', `sh -c 'nohup setsid ${accPath || 'acc'} -D restart >/dev/null 2>&1 &' &`]);
             } catch (e) {
                 console.warn("Could not restart accd:", e);
             }
@@ -365,11 +370,9 @@ document.addEventListener('DOMContentLoaded', function() {
             showError("Configuration reset to defaults!");
             setTimeout(hideError, 3000);
 
-            // Restart accd to apply changes
+            // Restart accd - nohup+setsid prevents APatch/FolkPatch from killing it
             try {
-                await commandExecutor.exec('pkill', ['-f', 'accd']);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                await executeAccCommand(['--init']);
+                await commandExecutor.exec('su', ['-c', `sh -c 'nohup setsid ${accPath || 'acc'} -D restart >/dev/null 2>&1 &' &`]);
             } catch (e) {
                 console.warn("Could not restart accd:", e);
             }
@@ -378,4 +381,56 @@ document.addEventListener('DOMContentLoaded', function() {
             logManager.error(`Config reset error: ${e}`);
         }
     }
+
+    // ---- Update channel management ----
+    const CHANNEL_FILE = '/data/adb/vr25/acc-data/update-channel';
+    const REPO_RAW = 'https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev';
+
+    function channelJsonUrl(channel) {
+        return channel === 'beta' ? `${REPO_RAW}/module-beta.json` : `${REPO_RAW}/module.json`;
+    }
+
+    async function loadChannelPreference() {
+        try {
+            const out = await commandExecutor.exec('cat', [CHANNEL_FILE]);
+            const channel = (out || '').trim() === 'beta' ? 'beta' : 'stable';
+            const sel = document.getElementById('update-channel-select');
+            if (sel) sel.value = channel;
+        } catch (e) {
+            // file missing = stable default
+            const sel = document.getElementById('update-channel-select');
+            if (sel) sel.value = 'stable';
+        }
+    }
+
+    async function applyChannel() {
+        const sel = document.getElementById('update-channel-select');
+        if (!sel) return;
+        const channel = sel.value;
+        const url = channelJsonUrl(channel);
+        try {
+            // persist choice
+            await commandExecutor.exec('su', ['-c', `echo ${channel} > ${CHANNEL_FILE}`]);
+            // rewrite updateJson line in module.prop for all known module paths
+            const propPaths = [
+                '/data/adb/modules/acc/module.prop',
+                '/data/adb/vr25/acc/module.prop'
+            ];
+            for (const p of propPaths) {
+                await commandExecutor.exec('su', ['-c',
+                    `[ -f ${p} ] && sed -i 's|^updateJson=.*|updateJson=${url}|' ${p} || true`]);
+            }
+            showError(`Update channel set to ${channel}. Restart your root manager to refresh.`, 'info');
+            logManager.info(`Update channel changed to ${channel} (${url})`);
+        } catch (e) {
+            showError(`Failed to set channel: ${e}`);
+            logManager.error(`Channel change error: ${e}`);
+        }
+    }
+
+    const applyChannelBtn = document.getElementById('apply-channel-btn');
+    if (applyChannelBtn) {
+        applyChannelBtn.addEventListener('click', applyChannel);
+    }
+    loadChannelPreference();
 });

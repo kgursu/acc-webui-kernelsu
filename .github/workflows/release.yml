@@ -27,10 +27,29 @@ jobs:
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
           echo "zip_url=https://github.com/${{ github.repository }}/releases/download/${VERSION}/${ZIP_NAME}" >> $GITHUB_OUTPUT
+          # Detect prerelease: version contains test/beta/pre/rc/alpha
+          case "$VERSION" in
+            *test*|*beta*|*pre*|*rc*|*alpha*)
+              echo "is_prerelease=true" >> $GITHUB_OUTPUT ;;
+            *)
+              echo "is_prerelease=false" >> $GITHUB_OUTPUT ;;
+          esac
 
-      - name: Update module.json
+      - name: Update module.json (stable only)
+        if: steps.version.outputs.is_prerelease == 'false'
         run: |
           cat > module.json << JSON
+          {
+              "version": "${{ steps.version.outputs.version }}",
+              "versionCode": ${{ steps.version.outputs.version_code }},
+              "zipUrl": "${{ steps.version.outputs.zip_url }}",
+              "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/dev/changelog.md"
+          }
+          JSON
+
+      - name: Update module-beta.json (all builds)
+        run: |
+          cat > module-beta.json << JSON
           {
               "version": "${{ steps.version.outputs.version }}",
               "versionCode": ${{ steps.version.outputs.version_code }},
@@ -59,6 +78,14 @@ jobs:
             customize.sh install.sh install-online.sh install-tarball.sh \
             License.md README.md README.html changelog.md
 
+      - name: Commit updated json files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add module.json module-beta.json || true
+          git diff --staged --quiet || git commit -m "ci: update update-channel json [skip ci]"
+          git push || true
+
       - name: Create or update release
         uses: softprops/action-gh-release@v2
         with:
@@ -74,6 +101,7 @@ jobs:
             - ✅ APatch
             - ✅ FolkPatch
           files: ${{ steps.version.outputs.zip_name }}
-          make_latest: true
+          prerelease: ${{ steps.version.outputs.is_prerelease }}
+          make_latest: ${{ steps.version.outputs.is_prerelease == 'false' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
