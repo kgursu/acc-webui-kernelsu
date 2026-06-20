@@ -383,18 +383,10 @@ button.loading::after {
     background: var(--card);
     color: var(--text);
     box-shadow: var(--shadow-sm);
-}
-
-.tab-button.active::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    height: 2px;
-    background: var(--green);
-    border-radius: var(--radius-full);
+    text-decoration: underline;
+    text-decoration-color: var(--green);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
 }
 
 .button-group {
