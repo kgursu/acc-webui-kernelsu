@@ -22,6 +22,13 @@ jobs:
         run: |
           VERSION=$(grep '^version=' module.prop | cut -d= -f2)
           VERSION_CODE=$(grep '^versionCode=' module.prop | cut -d= -f2)
+          # Auto versionCode: if set to AUTO, generate YYYYMMDD + HHMM (UTC)
+          # Date+time guarantees a monotonically increasing, collision-free code.
+          if [ "$VERSION_CODE" = "AUTO" ]; then
+            VERSION_CODE=$(date -u +%Y%m%d%H%M)
+            sed -i "s|^versionCode=.*|versionCode=${VERSION_CODE}|" module.prop
+            echo "Auto-generated versionCode: $VERSION_CODE"
+          fi
           ZIP_NAME="acc-webui_${VERSION}.zip"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT

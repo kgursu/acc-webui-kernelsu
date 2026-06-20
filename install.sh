@@ -306,9 +306,9 @@ if $magisk && ! $KSU && ! $APATCH; then
     echo "#!/system/bin/sh
 #exec_wrapper
 if [ -f $tmpd/.updated ]; then
-  exec /dev/${i#*:} \"$@\"
+  exec /dev/${i#*:} \"\$@\"
 else
-  exec /system/bin/sh /data/adb/$domain/$id/${i%:*} \"$@\"
+  exec /system/bin/sh /data/adb/$domain/$id/${i%:*} \"\$@\"
 fi" > $j
     chmod 0755 $j
   done

@@ -1,3 +1,28 @@
+**v2025.5.18-dev-apatch-1.1-test5 (2026062002)**
+- WebUI: fix active tab indicator (underline instead of strike-through)
+
+**v2025.5.18-dev-apatch-1.1-test4 (2026062001)**
+- Fix wrapper not passing arguments ($@ escaping); acc commands work from terminal again
+
+**v2025.5.18-dev-apatch-1.1-test3 (2026060303)**
+- WebUI: add update channel selector (stable / beta)
+- WebUI: fix incorrect "failed to save" caused by wrong errno check
+- CI: prerelease detection; test builds no longer pushed as stable updates
+
+**v2025.5.18-dev-apatch-1.1-test2 (2026060302)**
+- WebUI: fix config save (removed faulty errno comparison)
+- WebUI: add /data/adb/ap/bin/acc to path detection (APatch/FolkPatch)
+- WebUI: use nohup+setsid to restart accd (prevents process kill on APatch/FolkPatch)
+- Installer: wrapper uses sh instead of source for correct exit codes
+
+**v2025.5.18-dev-apatch-1.0 (20260527)**
+- APatch and FolkPatch compatibility
+- Skip system/bin OverlayFS mount to prevent boot deadlock
+- Symlink acc executables to /data/adb/ap/bin for PATH access
+- Fix service.sh --init blocking installer UI
+- Fix missing .config-ver / .config-help file errors
+- Updated WebUI to latest version
+
 **v2025.5.18-dev (202505180)**
 - acc -f fixes & enhancements
 - acca -t q ... (quiet test; reports Ok, Idle or Fail)
