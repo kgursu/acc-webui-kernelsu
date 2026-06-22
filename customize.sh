@@ -255,6 +255,8 @@ installDir=$(readlink -f $installDir/$id)
 
 cp $srcDir/module.prop $installDir/
 cp -f $srcDir/README.* $data_dir/
+# also keep a copy in the module dir so the WebUI Open Manual button finds it
+cp -f $srcDir/README.md $installDir/ 2>/dev/null || :
 
 # KaiOS patches
 [ ! -d /data/usbmsc_mnt/ ] || {

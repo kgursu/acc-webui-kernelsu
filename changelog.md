@@ -1,3 +1,9 @@
+**v2025.5.18-dev-apatch-1.1-test7 (2026062004)**
+- WebUI: fix update check showing raw progress bar characters
+- WebUI: Open Manual now finds README in multiple locations, opens online if missing
+- WebUI: fix Export Logs reporting failure when the archive was actually created
+- Installer: keep a README copy in the module directory for the manual viewer
+
 **v2025.5.18-dev-apatch-1.1-test6 (2026062003)**
 - WebUI: scrollable settings tabs now show a right-edge arrow/fade indicator
 - WebUI: fix bottom nav label clipping on narrow screens (Maintenance)

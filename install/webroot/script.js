@@ -683,14 +683,34 @@ async function initializeUI(accPath) {
     refreshLogsBtn.addEventListener('click', loadLogs);
 
     exportLogsBtn.addEventListener('click', async () => {
+        const origText = exportLogsBtn.textContent;
+        exportLogsBtn.disabled = true;
+        exportLogsBtn.textContent = 'Exporting...';
         try {
-            await commandExecutor.exec(accPath, ['-le']);
-            showError("Logs exported to /sdcard/Download/acc-logs-*.tgz", 'success');
-            setTimeout(hideError, 3000);
-            await logManager.info("Logs exported");
-        } catch (e) {
-            showError(`Export logs failed: ${e}`);
-            await logManager.error(`Export logs error: ${e}`);
+            // acc -le may return non-zero even on success (tar warnings), so check for the output file
+            let out = '';
+            try {
+                out = await commandExecutor.exec(accPath, ['-le']);
+            } catch (e) {
+                out = String(e); // keep going; verify by file existence below
+            }
+            // Confirm a tgz was actually produced
+            let created = '';
+            try {
+                created = await commandExecutor.exec('sh', ['-c',
+                    'ls -t /sdcard/Download/acc-logs-*.tgz 2>/dev/null | head -1']);
+            } catch (e) { created = ''; }
+            if (created && created.trim()) {
+                showError(`Logs exported to ${created.trim()}`, 'success');
+                setTimeout(hideError, 4000);
+                await logManager.info("Logs exported");
+            } else {
+                showError(`Export logs failed: ${out}`);
+                await logManager.error(`Export logs error: ${out}`);
+            }
+        } finally {
+            exportLogsBtn.disabled = false;
+            exportLogsBtn.textContent = origText;
         }
     });
 
@@ -709,22 +729,36 @@ async function initializeUI(accPath) {
 
     upgradeBtn.addEventListener('click', async () => {
         if (confirm("Check for ACC updates?")) {
+            const origText = upgradeBtn.textContent;
+            upgradeBtn.disabled = true;
+            upgradeBtn.textContent = 'Checking...';
             try {
-                const result = await commandExecutor.exec(accPath, ['-u', '-c', '-n']);
-                if (result.includes('Update available') || /^\d+$/.test(result.trim())) {
-                    if (confirm("Update available. Install now?")) {
+                // -u check; output may contain download progress bars (#### / #=#=#)
+                const raw = await commandExecutor.exec(accPath, ['-u', '-c', '-n']);
+                // Strip progress noise: hashes, #=#=#, percentages, carriage returns
+                const clean = (raw || '')
+                    .replace(/\r/g, '\n')
+                    .split('\n')
+                    .map(l => l.replace(/#+/g, '').replace(/#=#=#/g, '').replace(/\d+\.\d+%/g, '').trim())
+                    .filter(l => l.length > 0)
+                    .join(' ')
+                    .trim();
+                const verCode = (clean.match(/\b(\d{6,})\b/) || [])[1];
+                if (verCode) {
+                    if (confirm(`Update available (${verCode}). Install now?`)) {
                         await commandExecutor.exec(accPath, ['-u', '-f']);
-                        showError("ACC updated successfully. Please refresh the page.", 'success');
+                        showError("ACC updated. Please reboot to apply.", 'success');
                     }
-                } else if (result.includes('No update available')) {
-                    showError("ACC is up to date", 'info');
                 } else {
-                    showError("Update check result: " + result.trim(), 'info');
+                    showError("ACC is up to date", 'info');
                 }
                 await logManager.info("Checked for updates");
             } catch (e) {
                 showError(`Update check failed: ${e}`);
                 await logManager.error(`Update check error: ${e}`);
+            } finally {
+                upgradeBtn.disabled = false;
+                upgradeBtn.textContent = origText;
             }
         }
     });
@@ -803,14 +837,32 @@ async function initializeUI(accPath) {
     });
 
     readmeBtn.addEventListener('click', async () => {
-        try {
-            const readme = await commandExecutor.exec('cat', ['/data/adb/vr25/acc/README.md']);
+        const readmePaths = [
+            '/data/adb/vr25/acc-data/README.md',
+            '/data/adb/vr25/acc/README.md',
+            '/data/adb/modules/acc/README.md'
+        ];
+        let readme = null;
+        for (const p of readmePaths) {
+            try {
+                const out = await commandExecutor.exec('cat', [p]);
+                if (out && out.trim().length > 0) { readme = out; break; }
+            } catch (e) { /* try next path */ }
+        }
+        if (readme) {
             document.getElementById('readme-content').innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace; font-size: 12px;">${readme.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
             document.getElementById('readme-modal').style.display = 'block';
             await logManager.info("README displayed");
-        } catch (e) {
-            showError(`Failed to load README: ${e}`);
-            await logManager.error(`README load error: ${e}`);
+        } else {
+            // Fallback: open the online manual in a browser
+            const url = 'https://github.com/kgursu/acc-webui-kernelsu/blob/dev/README.md';
+            try {
+                await commandExecutor.exec('su', ['-c', `am start -a android.intent.action.VIEW -d ${url}`]);
+                showError("Opening manual in browser...", 'info');
+            } catch (e) {
+                showError(`Manual not found locally. Visit: ${url}`, 'info');
+            }
+            await logManager.info("README opened online (local copy missing)");
         }
     });
 
