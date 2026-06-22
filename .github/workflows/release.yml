@@ -78,6 +78,15 @@ jobs:
           cp customize.sh install.sh
           cp customize.sh META-INF/com/google/android/update-binary
 
+      - name: Cache-bust WebUI assets
+        run: |
+          VC="${{ steps.version.outputs.version_code }}"
+          # First strip any existing ?v=... to stay idempotent, then append current versionCode
+          sed -i -E "s|(href=\"style.css)(\?v=[0-9]+)?\"|\1?v=${VC}\"|" install/webroot/index.html
+          sed -i -E "s|(src=\"script.js)(\?v=[0-9]+)?\"|\1?v=${VC}\"|" install/webroot/index.html
+          sed -i -E "s|(src=\"config.js)(\?v=[0-9]+)?\"|\1?v=${VC}\"|" install/webroot/index.html
+          echo "Cache-bust applied with v=${VC}"
+
       - name: Build flashable zip
         run: |
           zip -r9 "${{ steps.version.outputs.zip_name }}" \

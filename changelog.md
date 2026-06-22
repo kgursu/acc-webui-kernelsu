@@ -1,3 +1,7 @@
+**v2025.5.18-dev-apatch-1.1-test10**
+- WebUI: add cache-busting to assets so the interface refreshes after updates without a reboot
+- CI: version stamp appended to script/style references at build time
+
 **v2025.5.18-dev-apatch-1.1-test9**
 - WebUI: fix update check reporting failure when ACC returns "no update" (exit 6)
 - WebUI: add execRaw helper so exit codes that signal state are not treated as errors
