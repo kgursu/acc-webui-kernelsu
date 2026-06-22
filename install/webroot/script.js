@@ -181,6 +181,44 @@ const commandExecutor = {
                 reject("KernelSU API not available");
             }
         });
+    },
+
+    // Like exec, but never rejects on non-zero exit; returns {errno, stdout, stderr}.
+    // Use for tools that signal meaningful states via exit codes (e.g. acc -u returns 6 = no update).
+    execRaw: function(command, args = [], timeout = 10000) {
+        return new Promise((resolve, reject) => {
+            debugLog(`Executing (raw): ${command} ${args.join(' ')}`, 'DEBUG');
+
+            if (typeof ksu !== 'undefined' && ksu.exec) {
+                const callback = `cmd_raw_${Date.now()}`;
+                let timedOut = false;
+                const timer = setTimeout(() => {
+                    timedOut = true;
+                    delete window[callback];
+                    reject(`Command timed out after ${timeout}ms`);
+                }, timeout);
+
+                window[callback] = function(errno, stdout, stderr) {
+                    if (timedOut) return;
+                    clearTimeout(timer);
+                    delete window[callback];
+                    resolve({ errno: errno, stdout: stdout || '', stderr: stderr || '' });
+                };
+
+                const fullCmd = [command, ...args].map(arg =>
+                    arg.includes(' ') ? `"${arg.replace(/"/g, '\\"')}"` : arg
+                ).join(' ');
+
+                try {
+                    ksu.exec(fullCmd, callback);
+                } catch (e) {
+                    clearTimeout(timer);
+                    reject(`Execution error: ${e}`);
+                }
+            } else {
+                reject("KernelSU API not available");
+            }
+        });
     }
 };
 
@@ -687,26 +725,19 @@ async function initializeUI(accPath) {
         exportLogsBtn.disabled = true;
         exportLogsBtn.textContent = 'Exporting...';
         try {
-            // acc -le may return non-zero even on success (tar warnings), so check for the output file
-            let out = '';
-            try {
-                out = await commandExecutor.exec(accPath, ['-le']);
-            } catch (e) {
-                out = String(e); // keep going; verify by file existence below
-            }
-            // Confirm a tgz was actually produced
-            let created = '';
-            try {
-                created = await commandExecutor.exec('sh', ['-c',
-                    'ls -t /sdcard/Download/acc-logs-*.tgz 2>/dev/null | head -1']);
-            } catch (e) { created = ''; }
-            if (created && created.trim()) {
-                showError(`Logs exported to ${created.trim()}`, 'success');
+            // acc -le may exit non-zero (tar warnings) even on success; ignore exit code
+            await commandExecutor.execRaw(accPath, ['-le'], 60000);
+            // Verify a tgz was actually produced
+            const created = await commandExecutor.execRaw('sh', ['-c',
+                'ls -t /sdcard/Download/acc-logs-*.tgz 2>/dev/null | head -1']);
+            const path = (created.stdout || '').trim();
+            if (path) {
+                showError(`Logs exported to ${path}`, 'success');
                 setTimeout(hideError, 4000);
                 await logManager.info("Logs exported");
             } else {
-                showError(`Export logs failed: ${out}`);
-                await logManager.error(`Export logs error: ${out}`);
+                showError("Export logs failed: no archive created");
+                await logManager.error("Export logs: no archive found");
             }
         } finally {
             exportLogsBtn.disabled = false;
@@ -733,24 +764,31 @@ async function initializeUI(accPath) {
             upgradeBtn.disabled = true;
             upgradeBtn.textContent = 'Checking...';
             try {
-                // -u check; output may contain download progress bars (#### / #=#=#)
-                const raw = await commandExecutor.exec(accPath, ['-u', '-c', '-n']);
-                // Strip progress noise: hashes, #=#=#, percentages, carriage returns
-                const clean = (raw || '')
+                // acc -u returns exit 6 when no update is available; don't treat that as an error
+                const res = await commandExecutor.execRaw(accPath, ['-u', '-c', '-n'], 60000);
+                const raw = (res.stdout || '') + ' ' + (res.stderr || '');
+                // Strip download progress noise (#### / #=#=# / 100.0%)
+                const clean = raw
                     .replace(/\r/g, '\n')
                     .split('\n')
-                    .map(l => l.replace(/#+/g, '').replace(/#=#=#/g, '').replace(/\d+\.\d+%/g, '').trim())
+                    .map(l => l.replace(/#+/g, '').replace(/\d+\.\d+%/g, '').trim())
                     .filter(l => l.length > 0)
                     .join(' ')
                     .trim();
-                const verCode = (clean.match(/\b(\d{6,})\b/) || [])[1];
-                if (verCode) {
-                    if (confirm(`Update available (${verCode}). Install now?`)) {
-                        await commandExecutor.exec(accPath, ['-u', '-f']);
-                        showError("ACC updated. Please reboot to apply.", 'success');
-                    }
-                } else {
+
+                if (/no update available/i.test(clean)) {
                     showError("ACC is up to date", 'info');
+                } else {
+                    const verCode = (clean.match(/\b(\d{6,})\b/) || [])[1];
+                    if (verCode) {
+                        if (confirm(`Update available (${verCode}). Install now?`)) {
+                            upgradeBtn.textContent = 'Updating...';
+                            await commandExecutor.execRaw(accPath, ['-u', '-f'], 120000);
+                            showError("ACC updated. Please reboot to apply.", 'success');
+                        }
+                    } else {
+                        showError("ACC is up to date", 'info');
+                    }
                 }
                 await logManager.info("Checked for updates");
             } catch (e) {

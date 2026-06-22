@@ -1,3 +1,8 @@
+**v2025.5.18-dev-apatch-1.1-test9**
+- WebUI: fix update check reporting failure when ACC returns "no update" (exit 6)
+- WebUI: add execRaw helper so exit codes that signal state are not treated as errors
+- WebUI: export logs now reliably confirms success via the created archive
+
 **v2025.5.18-dev-apatch-1.1-test8 (2026062005)**
 - WebUI: fix update channel controls overflowing to the right on wide screens
 - WebUI: ACC version stays inline on wide screens, wraps only on narrow ones
