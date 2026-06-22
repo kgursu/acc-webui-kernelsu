@@ -182,8 +182,20 @@ h2::before {
 .status-item.stack .status-value {
     text-align: left;
     white-space: normal;
-    word-break: break-all;
+    word-break: break-word;
     font-size: 13px;
+}
+
+/* On wide screens keep the version inline; let it wrap rather than force a new line */
+@media (min-width: 768px) {
+    .status-item.stack {
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: space-between;
+    }
+    .status-item.stack .status-value {
+        text-align: right;
+    }
 }
 
 .status-value.status-good,
@@ -853,6 +865,29 @@ button.loading::after {
 
     .config-item input[type="number"] {
         max-width: 100px;
+    }
+
+    /* Block items keep label on top, controls grouped and constrained */
+    .config-item.config-item-block {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .config-item-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+        max-width: 480px;
+        width: 100%;
+    }
+
+    .config-item-controls select {
+        width: 100%;
+    }
+
+    .config-item-controls button {
+        align-self: flex-start;
     }
 }
 

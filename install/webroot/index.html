@@ -327,16 +327,18 @@
                                     Show debug console on all pages for troubleshooting
                                 </small>
                             </div>
-                            <div class="config-item">
+                            <div class="config-item config-item-block">
                                 <label for="update-channel-select">Update Channel:</label>
-                                <select id="update-channel-select">
-                                    <option value="stable">Stable</option>
-                                    <option value="beta">Beta (includes pre-releases)</option>
-                                </select>
-                                <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
-                                    Beta receives test builds first. Changes which update feed the module checks.
-                                </small>
-                                <button id="apply-channel-btn" style="margin-top: 10px;">Apply Channel</button>
+                                <div class="config-item-controls">
+                                    <select id="update-channel-select">
+                                        <option value="stable">Stable</option>
+                                        <option value="beta">Beta (includes pre-releases)</option>
+                                    </select>
+                                    <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
+                                        Beta receives test builds first. Changes which update feed the module checks.
+                                    </small>
+                                    <button id="apply-channel-btn" style="margin-top: 10px;">Apply Channel</button>
+                                </div>
                             </div>
                         </div>
                     </div>

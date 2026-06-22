@@ -1,3 +1,7 @@
+**v2025.5.18-dev-apatch-1.1-test8 (2026062005)**
+- WebUI: fix update channel controls overflowing to the right on wide screens
+- WebUI: ACC version stays inline on wide screens, wraps only on narrow ones
+
 **v2025.5.18-dev-apatch-1.1-test7 (2026062004)**
 - WebUI: fix update check showing raw progress bar characters
 - WebUI: Open Manual now finds README in multiple locations, opens online if missing
