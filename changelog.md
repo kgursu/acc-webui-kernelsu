@@ -1,3 +1,7 @@
+**v2025.5.18-dev-apatch-1.1-test11**
+- Installer: update channel preference now re-applied on every boot via service.sh (survives module updates)
+- Fix stable module.json carrying an outdated versionCode
+
 **v2025.5.18-dev-apatch-1.1-test10**
 - WebUI: add cache-busting to assets so the interface refreshes after updates without a reboot
 - CI: version stamp appended to script/style references at build time
