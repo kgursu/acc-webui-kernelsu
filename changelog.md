@@ -1,3 +1,9 @@
+**v2025.5.18-dev-apatch-1.1-test6 (2026062003)**
+- WebUI: scrollable settings tabs now show a right-edge arrow/fade indicator
+- WebUI: fix bottom nav label clipping on narrow screens (Maintenance)
+- WebUI: ACC version row wraps to a second line when too long
+- WebUI: normalize Celsius symbol (℃ to °C) for consistent rendering
+
 **v2025.5.18-dev-apatch-1.1-test5 (2026062002)**
 - WebUI: fix active tab indicator (underline instead of strike-through)
 

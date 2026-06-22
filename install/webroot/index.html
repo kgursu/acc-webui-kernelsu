@@ -44,7 +44,7 @@
                             <span class="status-key">ACC Installation:</span>
                             <span class="status-value" id="acc-install-status">Checking...</span>
                         </div>
-                        <div class="status-item">
+                        <div class="status-item stack">
                             <span class="status-key">ACC Version:</span>
                             <span class="status-value" id="acc-version">-</span>
                         </div>
@@ -169,12 +169,14 @@
                 <div class="card" id="settings-panel" style="display: none;">
                     <h2>Configuration Settings</h2>
                     
-                    <div class="tab-buttons">
-                        <button class="tab-button active" data-tab="basic-settings">Basic</button>
-                        <button class="tab-button" data-tab="limits-settings">Limits</button>
-                        <button class="tab-button" data-tab="advanced-settings">Advanced</button>
-                        <button class="tab-button" data-tab="cooldown-settings">Cooldown</button>
-                        <button class="tab-button" data-tab="ui-settings">UI</button>
+                    <div class="tab-buttons-wrap">
+                        <div class="tab-buttons">
+                            <button class="tab-button active" data-tab="basic-settings">Basic</button>
+                            <button class="tab-button" data-tab="limits-settings">Limits</button>
+                            <button class="tab-button" data-tab="advanced-settings">Advanced</button>
+                            <button class="tab-button" data-tab="cooldown-settings">Cooldown</button>
+                            <button class="tab-button" data-tab="ui-settings">UI</button>
+                        </div>
                     </div>
                     
                     <div class="tab-content">

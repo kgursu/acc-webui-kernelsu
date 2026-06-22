@@ -172,6 +172,20 @@ h2::before {
     white-space: nowrap;
 }
 
+/* Long values (e.g. ACC version string) may wrap and stack under the key */
+.status-item.stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.status-item.stack .status-value {
+    text-align: left;
+    white-space: normal;
+    word-break: break-all;
+    font-size: 13px;
+}
+
 .status-value.status-good,
 .good {
     color: var(--good);
@@ -346,16 +360,51 @@ button.loading::after {
     }
 }
 
+.tab-buttons-wrap {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+/* Right fade + arrow shown when more tabs are scrollable */
+.tab-buttons-wrap.scrollable::after {
+    content: '›';
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: linear-gradient(to right, transparent, var(--bg) 60%);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    pointer-events: none;
+}
+
+/* Hide the indicator once scrolled to the end */
+.tab-buttons-wrap.scrolled-end::after {
+    opacity: 0;
+}
+
 .tab-buttons {
     display: flex;
     gap: 6px;
-    margin-bottom: 20px;
+    margin-bottom: 0;
     border-bottom: none;
     padding: 4px;
     background: var(--bg);
     border-radius: var(--radius-md);
     overflow-x: auto;
     overflow-y: visible;
+    scrollbar-width: none;
+}
+
+.tab-buttons::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-button {
@@ -665,6 +714,7 @@ button.loading::after {
     box-shadow: var(--shadow-md), 0 0 16px rgba(0, 0, 0, 0.12);
     transform: translateY(-3px) scale(1.05);
     z-index: 2;
+    overflow: visible;
 }
 
 .nav-button.active::after {
@@ -703,6 +753,7 @@ button.loading::after {
     transition: all 0.3s ease;
     text-shadow: 0 1px 2px rgba(0,0,0,0.03);
     pointer-events: none;
+    white-space: nowrap;
 }
 
 .nav-button.active .nav-text {
@@ -1034,8 +1085,9 @@ button.loading::after {
     }
 
     .nav-button {
-        padding: 10px 12px;
-        min-width: 60px;
+        padding: 10px 8px;
+        min-width: 58px;
+        flex: 1 1 0;
     }
 
     .nav-icon {
@@ -1044,8 +1096,12 @@ button.loading::after {
     }
 
     .nav-text {
-        font-size: 9px;
-        letter-spacing: 0.6px;
+        font-size: 8px;
+        letter-spacing: 0.3px;
+    }
+
+    .nav-button.active {
+        transform: translateY(-3px) scale(1.02);
     }
 
     .tab-button {

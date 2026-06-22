@@ -285,10 +285,12 @@ async function updateStatus() {
         const currentNow = status.current_now || '-';
         document.getElementById('current-limit').textContent = currentNow;
 
-        // Temperature - handle "28℃" format
+        // Temperature - normalize "28℃" (U+2103 single glyph) to "28°C" for consistent rendering
         const tempElement = document.getElementById('temperature');
         if (tempElement) {
-            tempElement.textContent = status.temp || '-';
+            let t = status.temp || '-';
+            t = t.replace(/\u2103/g, '\u00B0C').replace(/\u2109/g, '\u00B0F');
+            tempElement.textContent = t;
         }
 
         // Power - handle "5.35W" format
@@ -1041,3 +1043,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError("Initialization failed. Check console for details.");
     }
 });
+// Tab scroll indicator: show right arrow/fade when more tabs are off-screen
+(function setupTabScrollIndicator() {
+    function update(wrap) {
+        const tabs = wrap.querySelector('.tab-buttons');
+        if (!tabs) return;
+        const scrollable = tabs.scrollWidth > tabs.clientWidth + 2;
+        wrap.classList.toggle('scrollable', scrollable);
+        const atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 2;
+        wrap.classList.toggle('scrolled-end', atEnd);
+    }
+    function init() {
+        document.querySelectorAll('.tab-buttons-wrap').forEach(wrap => {
+            const tabs = wrap.querySelector('.tab-buttons');
+            if (!tabs) return;
+            update(wrap);
+            tabs.addEventListener('scroll', () => update(wrap), { passive: true });
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    window.addEventListener('resize', () => {
+        document.querySelectorAll('.tab-buttons-wrap').forEach(update);
+    }, { passive: true });
+})();
