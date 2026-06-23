@@ -1,6 +1,7 @@
-**v1.1-test2 (versionCode 3)**
+**v1.1-test2 (versionCode 4)**
 - WebUI: rename "ACC Version" row to "ACC WebUI Version"
 - WebUI: strip daemon init noise from the version readout
+- Remove versionCode from zip filename (parentheses broke FolkPatch downloads)
 
 **v1.1-test1 (versionCode 1)**
 - Switch to a simple incremental versionCode independent of the version name
