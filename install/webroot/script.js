@@ -362,6 +362,21 @@ async function updateStatus() {
     }
 }
 
+// Extract just the ACC version from `acc -v` output.
+// The daemon may prepend lines like "accd --init" or progress text; keep the version token.
+function cleanVersion(raw) {
+    if (!raw) return '-';
+    const text = String(raw).replace(/\r/g, '\n');
+    // Look for a vX.Y... token (optionally followed by "(N)")
+    const m = text.match(/v\d[\w.\-]*(?:\s*\(\d+\))?/);
+    if (m) return m[0].trim();
+    // Fallback: last non-empty line, stripped of known noise
+    const lines = text.split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !/accd|--init|⏳|#|%/.test(l));
+    return lines.length ? lines[lines.length - 1] : '-';
+}
+
 async function verifySystem() {
     console.log("Starting system verification...");
     
@@ -389,7 +404,7 @@ async function verifySystem() {
             const version = await commandExecutor.exec(accPath, ['-v']);
             console.log("ACC found in PATH, version:", version);
             document.getElementById('acc-install-status').textContent = 'Found in PATH';
-            document.getElementById('acc-version').textContent = version.trim();
+            document.getElementById('acc-version').textContent = cleanVersion(version);
             updateStatusClass(document.getElementById('acc-install-status'), 'OK');
             updateStatusClass(document.getElementById('acc-version'), version);
 
@@ -432,7 +447,7 @@ async function verifySystem() {
                 console.log(`ACC found at ${path}, version:`, version);
                 accPath = path;
                 document.getElementById('acc-install-status').textContent = `Found at ${path}`;
-                document.getElementById('acc-version').textContent = version.trim();
+                document.getElementById('acc-version').textContent = cleanVersion(version);
                 updateStatusClass(document.getElementById('acc-install-status'), 'OK');
                 updateStatusClass(document.getElementById('acc-version'), version);
 

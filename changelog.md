@@ -1,3 +1,7 @@
+**v1.1-test2 (versionCode 3)**
+- WebUI: rename "ACC Version" row to "ACC WebUI Version"
+- WebUI: strip daemon init noise from the version readout
+
 **v1.1-test1 (versionCode 1)**
 - Switch to a simple incremental versionCode independent of the version name
 - Add Base ACC Version field in the WebUI System Verification panel
