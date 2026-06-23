@@ -1,6 +1,6 @@
 {
-    "version": "v2025.5.18-dev-apatch-1.1-test11",
-    "versionCode": 202606220709,
-    "zipUrl": "https://github.com/kgursu/acc-webui-kernelsu/releases/download/v2025.5.18-dev-apatch-1.1-test11/acc-webui_v2025.5.18-dev-apatch-1.1-test11.zip",
+    "version": "v1.1-test1",
+    "versionCode": 1,
+    "zipUrl": "https://github.com/kgursu/acc-webui-kernelsu/releases/download/v1.1-test1/acc-webui_v1.1-test1_(1).zip",
     "changelog": "https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/changelog.md"
 }

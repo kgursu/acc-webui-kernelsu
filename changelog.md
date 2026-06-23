@@ -1,3 +1,9 @@
+**v1.1-test1 (versionCode 1)**
+- Switch to a simple incremental versionCode independent of the version name
+- Add Base ACC Version field in the WebUI System Verification panel
+- Shorten release tags and version naming (v1.1 scheme)
+- Simplify CI: no auto versionCode, no repo commits from Actions (avoids merge conflicts)
+
 **v2025.5.18-dev-apatch-1.1-test11**
 - Installer: update channel preference now re-applied on every boot via service.sh (survives module updates)
 - Fix stable module.json carrying an outdated versionCode
