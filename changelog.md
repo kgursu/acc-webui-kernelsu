@@ -1,3 +1,7 @@
+**v1.1-test21 (versionCode 49)**
+- WebUI: Enable/Disable Switches modal scrolls properly on small screens instead of moving the background
+- WebUI: switch list now also includes candidates from acc -p, dropping full-path /sys nodes
+
 **v1.1-test20 (versionCode 47)**
 - WebUI: Disabled Switches counts variants from all known switches, so write.log-only entries show (N types) too
 

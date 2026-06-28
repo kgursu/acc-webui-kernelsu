@@ -1236,15 +1236,22 @@ async function initializeUI(accPath) {
         const container = document.getElementById('switches-list');
         if (!container) return;
         container.textContent = 'Loading switches...';
-        const [pool, working, excluded, hashed] = await Promise.all([
+        const accCmd = (typeof globalAccPath !== 'undefined' && globalAccPath) || 'acc';
+        const [pool, working, excluded, hashed, parsed] = await Promise.all([
             readLines(CH_SWITCHES), readLines(WORKING_SWITCHES),
-            readLines(EXCLUDED_FILE), readHashedNames()
+            readLines(EXCLUDED_FILE), readHashedNames(),
+            // acc -p lists every candidate switch from power_supply (the full test pool)
+            commandExecutor.execRaw(accCmd, ['-p'], 20000)
+                .then(r => (r.stdout || '').split('\n').map(l => l.trim()).filter(Boolean))
+                .catch(() => [])
         ]);
         const excludedSet = new Set(excluded);
         const workingLines = working.map(stripWorkingTag).filter(l => l.length > 0);
-        // Show every switch ACC tested (working-switches.log) plus the live pool and our excluded
-        // lines, so variants that didn't end up in ch-switches are still selectable.
-        const all = Array.from(new Set([...workingLines, ...pool, ...excluded])).sort();
+        // From acc -p, keep only short-form switches (category/name value value), dropping
+        // full /sys/... node paths which are noise the user shouldn't need to toggle.
+        const parsedLines = parsed.filter(l => !l.startsWith('/') && /^\S+\/\S+\s+\S+\s+\S+/.test(l));
+        // Union of: tested switches, candidate pool, live pool, and our excluded lines.
+        const all = Array.from(new Set([...workingLines, ...parsedLines, ...pool, ...excluded])).sort();
         if (all.length === 0) {
             container.textContent = 'No switches found. Run Test Switches once to populate the list.';
             return;
