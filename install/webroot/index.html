@@ -457,6 +457,21 @@
             </div>
         </div>
     </div>
+    <div id="reset-switches-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-reset-switches">&times;</span>
+            <h2>Reset Switches</h2>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 14px;">
+                    Choose how far to reset. Safe Clear keeps switches ACC marked in write.log (it may have flagged them after a switch locked the device). Set to Defaults clears those marks too, so every switch is testable again.
+                </p>
+                <div class="button-group">
+                    <button id="reset-safe-clear">Safe Clear</button>
+                    <button id="reset-set-defaults">Set to Defaults</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
     <script src="config.js"></script>
 </body>

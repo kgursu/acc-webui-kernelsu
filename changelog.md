@@ -1,3 +1,12 @@
+**v1.1-test14 (versionCode 35)**
+- WebUI: Reset Switches now asks Safe Clear (keep write.log marks) or Set to Defaults (strip all # marks)
+
+**v1.1-test13 (versionCode 34)**
+- WebUI: Enable/Disable Switches now reads write.log, so switches ACC skips (#name) show as disabled
+- WebUI: disabling a switch adds #name to write.log; re-enabling its last variant removes the #
+- WebUI: Disabled Switches count includes write.log entries
+- WebUI: raise command timeout to 15s so slow devices (e.g. Xperia Z2) stop hitting status timeouts
+
 **v1.1-test12 (versionCode 30)**
 - WebUI: button labels wrap instead of clipping on narrow screens (Enable/Disable Switches)
 - WebUI: move Log Monitor to the Config page next to Enable/Disable Switches

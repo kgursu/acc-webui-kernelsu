@@ -142,7 +142,7 @@ function debugLog(message, level = 'DEBUG') {
 }
 
 const commandExecutor = {
-    exec: function(command, args = [], timeout = 10000) {
+    exec: function(command, args = [], timeout = 15000) {
         return new Promise((resolve, reject) => {
             debugLog(`Executing: ${command} ${args.join(' ')}`, 'DEBUG');
 
@@ -185,7 +185,7 @@ const commandExecutor = {
 
     // Like exec, but never rejects on non-zero exit; returns {errno, stdout, stderr}.
     // Use for tools that signal meaningful states via exit codes (e.g. acc -u returns 6 = no update).
-    execRaw: function(command, args = [], timeout = 10000) {
+    execRaw: function(command, args = [], timeout = 15000) {
         return new Promise((resolve, reject) => {
             debugLog(`Executing (raw): ${command} ${args.join(' ')}`, 'DEBUG');
 
@@ -1169,6 +1169,10 @@ async function initializeUI(accPath) {
     // We keep our own persistent exclusion file; service.sh removes those lines from ch-switches on boot.
     const CH_SWITCHES = '/dev/.vr25/acc/ch-switches';
     const EXCLUDED_FILE = '/data/adb/vr25/acc-data/webui-excluded-switches';
+    const WRITE_LOG = '/data/adb/vr25/acc-data/logs/write.log';
+
+    // A ch-switches line is "name value1 value2"; the switch name is the first field.
+    function switchName(line) { return line.split(/\s+/)[0]; }
 
     async function readLines(path) {
         try {
@@ -1177,34 +1181,51 @@ async function initializeUI(accPath) {
         } catch (e) { return []; }
     }
 
+    // Returns the set of switch names commented out (#name) in write.log.
+    // ACC marks a switch with "#" while testing and leaves it if the test locked the device,
+    // so a "#name" means "skip this switch during Test Switches".
+    async function readHashedNames() {
+        const lines = await readLines(WRITE_LOG);
+        const set = new Set();
+        for (const l of lines) {
+            if (l.startsWith('#')) set.add(l.slice(1).trim());
+        }
+        return set;
+    }
+
     async function updateDisabledSwitchesCount() {
         const el = document.getElementById('disabled-switches-count');
         if (!el) return;
-        const excluded = await readLines(EXCLUDED_FILE);
-        el.textContent = excluded.length === 0 ? 'None' : String(excluded.length);
+        const [excluded, hashed] = await Promise.all([readLines(EXCLUDED_FILE), readHashedNames()]);
+        // Count unique disabled switch names: our excluded lines plus write.log "#name" entries
+        const names = new Set([...excluded.map(switchName), ...hashed]);
+        el.textContent = names.size === 0 ? 'None' : String(names.size);
     }
 
     async function loadSwitchesList() {
         const container = document.getElementById('switches-list');
         if (!container) return;
         container.textContent = 'Loading switches...';
-        // The live pool plus any currently-excluded lines (so excluded ones still appear, unticked)
-        const [pool, excluded] = await Promise.all([readLines(CH_SWITCHES), readLines(EXCLUDED_FILE)]);
+        const [pool, excluded, hashed] = await Promise.all([
+            readLines(CH_SWITCHES), readLines(EXCLUDED_FILE), readHashedNames()
+        ]);
         const excludedSet = new Set(excluded);
-        // Union: pool ∪ excluded, so a disabled switch removed from the live pool still shows
+        // Union of the live pool and our excluded lines, so disabled lines still show (unticked)
         const all = Array.from(new Set([...pool, ...excluded])).sort();
         if (all.length === 0) {
             container.textContent = 'No switches found. Run Test Switches once to populate the list.';
             return;
         }
         container.innerHTML = '';
-        all.forEach((line, idx) => {
-            const enabled = !excludedSet.has(line);
+        all.forEach((line) => {
+            // A line counts as disabled if we excluded the exact line, or write.log skips its name
+            const name = switchName(line);
+            const disabled = excludedSet.has(line) || hashed.has(name);
             const row = document.createElement('label');
             row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(0,0,0,0.06); cursor:pointer; font-family:monospace; font-size:12px;';
             const cb = document.createElement('input');
             cb.type = 'checkbox';
-            cb.checked = enabled;
+            cb.checked = !disabled;
             cb.dataset.line = line;
             cb.style.cssText = 'width:18px; height:18px; flex-shrink:0;';
             const span = document.createElement('span');
@@ -1221,18 +1242,41 @@ async function initializeUI(accPath) {
         if (!container) return;
         const boxes = container.querySelectorAll('input[type="checkbox"]');
         const excluded = [];
-        boxes.forEach(cb => { if (!cb.checked) excluded.push(cb.dataset.line); });
+        const enabledNames = new Set();
+        const disabledNames = new Set();
+        boxes.forEach(cb => {
+            const line = cb.dataset.line;
+            const name = switchName(line);
+            if (!cb.checked) { excluded.push(line); disabledNames.add(name); }
+            else { enabledNames.add(name); }
+        });
+        // A name keeps its write.log "#" only if it still has at least one disabled variant.
+        // So names that are enabled AND have no disabled variant left get their "#" removed.
+        const namesToUnhash = [...enabledNames].filter(n => !disabledNames.has(n));
         try {
-            // Write our exclusion file (one line per disabled switch)
+            // 1. Our exclusion file holds the exact disabled lines (full granularity)
             const body = excluded.join('\n');
             const b64 = btoa(unescape(encodeURIComponent(body + (body ? '\n' : ''))));
             await commandExecutor.execRaw('su', ['-c',
                 `echo '${b64}' | base64 -d > ${EXCLUDED_FILE}`], 8000);
-            // Apply immediately to the live pool too: remove excluded lines from ch-switches now
+            // 2. Remove disabled lines from the live pool now
             for (const line of excluded) {
                 const esc = line.replace(/[\\/&|]/g, '\\$&');
                 await commandExecutor.execRaw('su', ['-c',
                     `sed -i '\\|^${esc}$|d' ${CH_SWITCHES} 2>/dev/null`], 5000).catch(()=>{});
+            }
+            // 3. Add "#name" to write.log for disabled switches (so ACC skips them on test)
+            for (const name of disabledNames) {
+                const esc = name.replace(/[\\/&|]/g, '\\$&');
+                // If the bare name exists, comment it; if neither form exists, append "#name"
+                await commandExecutor.execRaw('su', ['-c',
+                    `touch ${WRITE_LOG}; sed -i '\\|^${esc}$|s|^|#|' ${WRITE_LOG} 2>/dev/null; grep -Eq '^#${esc}$' ${WRITE_LOG} || echo '#${name}' >> ${WRITE_LOG}`], 5000).catch(()=>{});
+            }
+            // 4. Remove "#" for names that are fully re-enabled (no disabled variant remains)
+            for (const name of namesToUnhash) {
+                const esc = name.replace(/[\\/&|]/g, '\\$&');
+                await commandExecutor.execRaw('su', ['-c',
+                    `sed -i '\\|^#${esc}$|s|^#||' ${WRITE_LOG} 2>/dev/null`], 5000).catch(()=>{});
             }
             await updateDisabledSwitchesCount();
             showError(`Saved. ${excluded.length} switch(es) disabled.`, 'success');
@@ -1258,13 +1302,41 @@ async function initializeUI(accPath) {
 
     // Reset Switches: clear our exclusion file so all switches are testable again
     const resetSwitchesBtn = document.getElementById('reset-switches-btn');
-    if (resetSwitchesBtn) resetSwitchesBtn.addEventListener('click', async () => {
-        if (!confirm("Re-enable all switches for testing? This clears your disabled list.")) return;
+    if (resetSwitchesBtn) resetSwitchesBtn.addEventListener('click', () => {
+        document.getElementById('reset-switches-modal').style.display = 'block';
+    });
+    const closeResetSwitches = document.getElementById('close-reset-switches');
+    if (closeResetSwitches) closeResetSwitches.addEventListener('click', () => {
+        document.getElementById('reset-switches-modal').style.display = 'none';
+    });
+
+    // Safe Clear: clear only our exclusion file, leave write.log marks intact
+    const resetSafeClear = document.getElementById('reset-safe-clear');
+    if (resetSafeClear) resetSafeClear.addEventListener('click', async () => {
         try {
             await commandExecutor.execRaw('su', ['-c', `rm -f ${EXCLUDED_FILE}`], 5000);
             await updateDisabledSwitchesCount();
-            showError("All switches re-enabled. Reboot to fully rebuild the pool.", 'success');
-            await logManager.info("Switch exclusions reset");
+            document.getElementById('reset-switches-modal').style.display = 'none';
+            showError("Your disabled list was cleared. write.log marks were kept.", 'success');
+            await logManager.info("Switch exclusions cleared (safe)");
+        } catch (e) {
+            showError(`Failed to clear switches: ${e}`);
+        }
+    });
+
+    // Set to Defaults: clear our file AND strip every "#" from write.log so all switches are testable
+    const resetSetDefaults = document.getElementById('reset-set-defaults');
+    if (resetSetDefaults) resetSetDefaults.addEventListener('click', async () => {
+        if (!confirm("Set to Defaults removes every skip mark in write.log, including ones ACC added after a switch locked the device. Continue?")) return;
+        try {
+            await commandExecutor.execRaw('su', ['-c', `rm -f ${EXCLUDED_FILE}`], 5000);
+            // Uncomment all lines in write.log (remove leading #), keeping the entries
+            await commandExecutor.execRaw('su', ['-c',
+                `[ -f ${WRITE_LOG} ] && sed -i 's/^#//' ${WRITE_LOG} 2>/dev/null || :`], 5000);
+            await updateDisabledSwitchesCount();
+            document.getElementById('reset-switches-modal').style.display = 'none';
+            showError("All switches reset to defaults. Reboot to rebuild the pool.", 'success');
+            await logManager.info("Switch exclusions reset to defaults (write.log cleared)");
         } catch (e) {
             showError(`Failed to reset switches: ${e}`);
         }
