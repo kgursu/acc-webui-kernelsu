@@ -1361,35 +1361,26 @@ async function initializeUI(accPath) {
     if (rebuildSwitches) rebuildSwitches.addEventListener('click', async () => {
         if (!confirm("Rebuild the full switch list? This restarts the daemon in init mode and briefly interrupts charging.")) return;
         const container = document.getElementById('switches-list');
-        if (container) container.textContent = 'Rebuilding switch pool... this can take up to a minute.';
+        if (container) container.textContent = 'Rebuilding switch pool... this can take a minute, please wait.';
         const acc = globalAccPath || 'acc';
         window.__accBusy = true;  // pause auto status/log refresh while the daemon is in init mode
         try {
             // ch-switches is only regenerated when the daemon starts in init mode, which happens
-            // when .batt-interface.sh is absent. Remove it, then restart: the daemon runs
-            // ls_ch_switches and rebuilds the full pool (and recreates .batt-interface.sh itself).
-            // Re-enable charging first as a safety net.
+            // when .batt-interface.sh is absent. Remove it, then restart synchronously: acc -D
+            // restart runs the init scan (ls_ch_switches) and only returns once accd has started,
+            // exactly like running it in a terminal. We wait for that with a long timeout instead
+            // of backgrounding it. acc -e first as a safety net so charging isn't left off.
             await commandExecutor.execRaw('su', ['-c',
                 `${acc} -e >/dev/null 2>&1; ` +
                 `${acc} -D stop >/dev/null 2>&1; ` +
                 `rm -f /dev/.vr25/acc/.batt-interface.sh; ` +
-                `nohup setsid ${acc} -D restart >/dev/null 2>&1 &`], 12000);
-            // Init-mode scan can take a while on slow devices. Poll until .batt-interface.sh is
-            // recreated (daemon finished init) rather than waiting a fixed time. Up to ~60s.
-            let ready = false;
-            for (let i = 0; i < 30; i++) {
-                await new Promise(r => setTimeout(r, 2000));
-                try {
-                    const c = await commandExecutor.execRaw('sh', ['-c',
-                        '[ -f /dev/.vr25/acc/.batt-interface.sh ] && echo ready'], 5000);
-                    if ((c.stdout || '').includes('ready')) { ready = true; break; }
-                } catch (e) { /* keep polling */ }
-            }
+                `${acc} -D restart`], 120000);
+            // Daemon has finished init by the time the command returns; ch-switches is ready.
             await loadSwitchesList();
-            showError(ready ? "Switch list rebuilt" : "Rebuild taking longer than expected; list may be partial", ready ? 'success' : 'info');
-            await logManager.info(`Switch pool rebuilt via init-mode restart (ready=${ready})`);
+            showError("Switch list rebuilt", 'success');
+            await logManager.info("Switch pool rebuilt via init-mode restart");
         } catch (e) {
-            showError(`Rebuild failed: ${e}`);
+            showError(`Rebuild failed or timed out: ${e}`);
             await loadSwitchesList();
         } finally {
             window.__accBusy = false;

@@ -1,3 +1,6 @@
+**v1.1-test27 (versionCode 57)**
+- WebUI: Rebuild runs the daemon restart synchronously (waits for init to finish, up to 2 min) instead of polling, matching the working terminal flow
+
 **v1.1-test26 (versionCode 56)**
 - WebUI: Rebuild polls for the daemon to finish init (up to ~60s) and pauses auto status refresh, stopping the timeout spam
 
