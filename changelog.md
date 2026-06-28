@@ -1,3 +1,6 @@
+**v1.1-test5 (versionCode 13)**
+- WebUI: status values wrap only when too long, short ones stay inline on the right
+
 **v1.1-test4 (versionCode 12)**
 - WebUI: tab scroll indicators now show on both sides and appear without tapping first
 - WebUI: fix Stop/Restart daemon using acc -D commands instead of pkill (error 1)
