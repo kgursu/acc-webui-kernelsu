@@ -227,11 +227,16 @@ function showError(message, type = 'error') {
     errorBox.textContent = message;
     errorBox.className = `error-box ${type}`;
     errorBox.style.display = 'block';
+    errorBox.style.pointerEvents = 'auto';
+    errorBox.onclick = hideError;
     debugLog(`${type.toUpperCase()}: ${message}`, 'INFO');
-    setTimeout(hideError, 5000);
+    // auto-dismiss; success/info shorter, errors longer
+    clearTimeout(window._errTimer);
+    window._errTimer = setTimeout(hideError, (type === 'error' || type === 'warn') ? 6000 : 4000);
 }
 
 function hideError() {
+    clearTimeout(window._errTimer);
     document.getElementById('error-display').style.display = 'none';
 }
 
@@ -988,67 +993,82 @@ async function initializeUI(accPath) {
         const outputElement = document.getElementById('test-switches-output');
         const runBtn = document.getElementById('run-test-switches');
         const stopBtn = document.getElementById('stop-test-switches');
-        
+
         runBtn.style.display = 'none';
         stopBtn.style.display = 'inline-block';
-        outputElement.textContent = 'Starting switch test...\n\n⏳ This may take several minutes. Testing charging switches...\n\n';
-        
-        let testTerminalId = null;
-        let checkInterval = null;
-        
-        try {
-            // Start the test command in background
-            const callback = `test_callback_${Date.now()}`;
-            window[callback] = function(errno, stdout, stderr) {
-                delete window[callback];
-                if (errno === 0) {
-                    outputElement.textContent += '\n✅ Test completed!\n\n' + stdout;
-                } else {
-                    outputElement.textContent += '\n❌ Test failed\n\n' + (stderr || stdout || 'Unknown error');
-                }
-                runBtn.style.display = 'inline-block';
-                stopBtn.style.display = 'none';
-                if (checkInterval) clearInterval(checkInterval);
-            };
-            
-            // Execute with streaming output simulation
-            ksu.exec(`${globalAccPath || accPath} -t 2>&1`, callback);
-            
-            // Simulate progress updates since we can't get real-time streaming
-            let dots = 0;
-            const progressMessages = [
-                '📋 Analyzing battery interface...',
-                '🔌 Testing charging switches...',
-                '⚡ Checking switch compatibility...',
-                '🔍 Validating results...',
-                '📊 Compiling test report...'
-            ];
-            let msgIndex = 0;
-            
-            checkInterval = setInterval(() => {
-                dots = (dots + 1) % 4;
-                const dotString = '.'.repeat(dots);
-                const currentMsg = progressMessages[msgIndex % progressMessages.length];
-                outputElement.textContent = `Starting switch test...\n\n⏳ This may take several minutes. Testing charging switches${dotString}\n\n${currentMsg}\n\nPlease wait, this process cannot be interrupted safely.`;
-                msgIndex++;
-            }, 3000);
-            
-            await logManager.info("Charging switches test started");
-        } catch (e) {
-            outputElement.textContent += `\n❌ Error: ${e}`;
-            await logManager.error(`Switch test error: ${e}`);
+        outputElement.textContent = 'Starting switch test...\n\nEnsure charger is plugged in.\n\n';
+
+        // Stream approach: run acc -t in the background writing to a log file,
+        // then poll the file so output appears live without blocking the WebView.
+        const acc = globalAccPath || accPath || 'acc';
+        const LOGF = '/data/adb/vr25/acc-data/logs/webui-test-live.log';
+        const DONEF = LOGF + '.done';
+        let pollInterval = null;
+        let lastLen = 0;
+        window._switchTestRunning = true;
+
+        const finish = () => {
+            window._switchTestRunning = false;
+            if (pollInterval) clearInterval(pollInterval);
             runBtn.style.display = 'inline-block';
             stopBtn.style.display = 'none';
-            if (checkInterval) clearInterval(checkInterval);
+        };
+
+        try {
+            const launch = `sh -c 'rm -f ${LOGF} ${DONEF}; (${acc} -t >${LOGF} 2>&1; echo EXIT:$? >>${LOGF}; touch ${DONEF}) >/dev/null 2>&1 &'`;
+            await commandExecutor.execRaw('su', ['-c', launch], 8000).catch(() => {});
+            await logManager.info("Charging switches test started (streaming)");
+
+            pollInterval = setInterval(async () => {
+                if (!window._switchTestRunning) return;
+                try {
+                    const res = await commandExecutor.execRaw('sh', ['-c', `cat ${LOGF} 2>/dev/null`], 8000);
+                    const content = res.stdout || '';
+                    if (content.length !== lastLen) {
+                        lastLen = content.length;
+                        outputElement.textContent = content.replace(/\nEXIT:\d+\s*$/, '\n');
+                        outputElement.scrollTop = outputElement.scrollHeight;
+                    }
+                    const done = await commandExecutor.execRaw('sh', ['-c', `[ -f ${DONEF} ] && echo done`], 5000);
+                    if ((done.stdout || '').trim() === 'done') {
+                        const m = content.match(/EXIT:(\d+)/);
+                        const code = m ? m[1] : '?';
+                        outputElement.textContent = content.replace(/\nEXIT:\d+\s*$/, '\n') +
+                            (code === '0' ? '\n\nTest completed.\n' : `\n\nTest finished (exit ${code}).\n`);
+                        outputElement.scrollTop = outputElement.scrollHeight;
+                        finish();
+                    }
+                } catch (e) {
+                    // transient read error; keep polling
+                }
+            }, 1000);
+        } catch (e) {
+            outputElement.textContent += `\nError: ${e}`;
+            await logManager.error(`Switch test error: ${e}`);
+            finish();
         }
     });
 
-    document.getElementById('stop-test-switches').addEventListener('click', () => {
+    document.getElementById('stop-test-switches').addEventListener('click', async () => {
+        window._switchTestRunning = false;
+        // Attempt to stop the running test and re-enable charging so the device
+        // never gets stuck in a non-charging state.
+        try {
+            await commandExecutor.execRaw('su', ['-c',
+                "pkill -f 'acc -t' 2>/dev/null; pkill -f accd 2>/dev/null; " +
+                (globalAccPath || accPath || 'acc') + " -e >/dev/null 2>&1; " +
+                "nohup setsid " + (globalAccPath || accPath || 'acc') + " -D restart >/dev/null 2>&1 &"], 10000).catch(()=>{});
+        } catch (e) { /* best effort */ }
+        const runBtn = document.getElementById('run-test-switches');
+        const stopBtn = document.getElementById('stop-test-switches');
+        if (runBtn) runBtn.style.display = 'inline-block';
+        if (stopBtn) stopBtn.style.display = 'none';
         document.getElementById('test-switches-modal').style.display = 'none';
-        showError("Test cancelled", 'info');
+        showError("Test stopped, charging re-enabled", 'info');
     });
 
     document.getElementById('close-test-switches').addEventListener('click', () => {
+        window._switchTestRunning = false;
         document.getElementById('test-switches-modal').style.display = 'none';
     });
 

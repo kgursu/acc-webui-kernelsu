@@ -1,3 +1,10 @@
+**v1.1-test3 (versionCode 9)**
+- WebUI: rename app title to "ACC WebUI" on every page
+- WebUI: show ACC installation result on two lines when the path is long
+- WebUI: keep ACC WebUI version on a single line (no needless wrap on phones)
+- WebUI: command result prompt now centers on screen and dismisses on tap
+- WebUI: switch test streams output live and Stop re-enables charging safely
+
 **v1.1-test2 (versionCode 4)**
 - WebUI: rename "ACC Version" row to "ACC WebUI Version"
 - WebUI: strip daemon init noise from the version readout
