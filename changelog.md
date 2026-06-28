@@ -1,3 +1,6 @@
+**v1.1-test15 (versionCode 36)**
+- WebUI: Reset Switches modal explains Safe Clear and Set to Defaults under each button
+
 **v1.1-test14 (versionCode 35)**
 - WebUI: Reset Switches now asks Safe Clear (keep write.log marks) or Set to Defaults (strip all # marks)
 

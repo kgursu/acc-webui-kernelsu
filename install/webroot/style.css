@@ -1185,3 +1185,18 @@ button.loading::after {
         padding: 12px;
     }
 }
+.reset-option {
+    margin-bottom: 16px;
+}
+
+.reset-option button {
+    width: 100%;
+    margin: 0 0 6px 0;
+}
+
+.reset-option small {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.4;
+}
