@@ -1,3 +1,7 @@
+**v1.1-test30 (versionCode 61)**
+- WebUI: Config page shows the Active Switch (the one the daemon uses, or Automatic)
+- WebUI: clarify that disabling a switch removes it from both testing and automatic use
+
 **v1.1-test29 (versionCode 59)**
 - WebUI: switch list now also reads acc-t_output log, capturing every tested switch (incl. ones that failed), matching the Test Switches count
 
