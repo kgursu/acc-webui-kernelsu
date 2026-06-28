@@ -1,3 +1,6 @@
+**v1.1-test24 (versionCode 54)**
+- WebUI: read the switch list via "acca -s s:" (ACC's own front-end command), falling back to the file
+
 **v1.1-test23 (versionCode 53)**
 - WebUI: rename Test All Features to Test Charging Control to reflect what it does
 - WebUI: show the underlying command under Test Switches (acc -t) and Test Charging Control (acc -d / acc -e)

@@ -1232,20 +1232,35 @@ async function initializeUI(accPath) {
         return line.replace(/^\[[a-z]\]\s+/i, '').replace(/\s*\{[^}]*\}\s*$/, '').trim();
     }
 
+    // Get the charging-switch list the way ACC's own front-ends do: "acca -s s:".
+    // acca routes this to acc -ss:, which prints "sort -u ch-switches". Fall back to
+    // reading the file directly if the command isn't available or times out.
+    async function readChSwitches() {
+        const acc = (typeof globalAccPath !== 'undefined' && globalAccPath) || 'acc';
+        const acca = acc.replace(/\/acc(\.sh)?$/, '/acca$1');
+        try {
+            const r = await commandExecutor.execRaw('su', ['-c', `${acca} -s s:`], 12000);
+            const lines = (r.stdout || '').split('\n').map(l => l.trim())
+                // Keep only switch-shaped lines: "name value value" (path may contain slashes)
+                .filter(l => l.length && /^\S+\s+\S+(\s+\S+)*$/.test(l) && /\//.test(l.split(/\s+/)[0]));
+            if (lines.length) return lines;
+        } catch (e) { /* fall through to file read */ }
+        return readLines(CH_SWITCHES);
+    }
+
     async function loadSwitchesList() {
         const container = document.getElementById('switches-list');
         if (!container) return;
         container.textContent = 'Loading switches...';
         const [pool, working, excluded, hashed] = await Promise.all([
-            readLines(CH_SWITCHES), readLines(WORKING_SWITCHES),
+            readChSwitches(), readLines(WORKING_SWITCHES),
             readLines(EXCLUDED_FILE), readHashedNames()
         ]);
         const excludedSet = new Set(excluded);
         const workingLines = working.map(stripWorkingTag).filter(l => l.length > 0);
-        // ch-switches is ACC's own list: ls_ch_switches patterns matched against real device
-        // files, then cleaned by oem-custom.sh. working-switches.log adds tested variants.
-        // Both are authoritative; we don't pull from acc -p, which scans power_supply broadly
-        // and returns nodes ACC doesn't treat as charging switches.
+        // ch-switches (via acca -s s:) is ACC's own list: ls_ch_switches patterns matched
+        // against real device files, then cleaned by oem-custom.sh. working-switches.log adds
+        // tested variants. Both are authoritative; acc -p is intentionally not used.
         const all = Array.from(new Set([...workingLines, ...pool, ...excluded])).sort();
         if (all.length === 0) {
             container.textContent = 'No switches found. Run Test Switches once to populate the list.';
