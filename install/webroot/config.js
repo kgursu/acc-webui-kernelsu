@@ -5,15 +5,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let accPath = (window.ACC && window.ACC.accPath) || null;
 
     // Enhanced command executor specifically for ACC
-    async function executeAccCommand(args = [], timeout = 5000) {
+    async function executeAccCommand(args = [], timeout = 15000) {
         const pathsToTry = [
             accPath,
+            '/data/adb/modules/acc/acc.sh',
+            '/data/adb/vr25/acc/acc.sh',
             '/data/adb/ap/bin/acc',        // APatch / FolkPatch
             '/data/adb/vr25/acc/acc',
             '/data/adb/modules/acc/acc',
             '/dev/acc',
-            '/system/bin/acc',
             '/data/adb/vr25/bin/acc',
+            '/system/bin/acc',
             'acc' // Try PATH as last resort
         ].filter((path, index, self) => path && self.indexOf(path) === index);
 

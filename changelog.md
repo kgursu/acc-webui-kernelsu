@@ -1,3 +1,8 @@
+**v1.1-test16 (versionCode 39)**
+- WebUI: raise config and daemon-status timeouts so slow devices stop failing to load
+- WebUI: add more space under section headings for consistent spacing
+- WebUI: swipe left or right to move between main tabs
+
 **v1.1-test15 (versionCode 36)**
 - WebUI: Reset Switches modal explains Safe Clear and Set to Defaults under each button
 

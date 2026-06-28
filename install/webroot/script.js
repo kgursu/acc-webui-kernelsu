@@ -314,7 +314,7 @@ async function updateStatus() {
         // Update daemon status by querying ACC directly (acc -D => "accd," running / "accd." stopped)
         let daemonRunning = true;
         try {
-            const d = await commandExecutor.execRaw(globalAccPath, ['-D'], 5000);
+            const d = await commandExecutor.execRaw(globalAccPath, ['-D'], 10000);
             const dout = (d.stdout || '').trim();
             if (/accd\.|not running|stopped|isn't running/i.test(dout)) {
                 daemonRunning = false;
@@ -1358,20 +1358,53 @@ async function initializeUI(accPath) {
 
 function initializeMainTabs() {
     const navButtons = document.querySelectorAll('.nav-button');
-    
+    const tabOrder = Array.from(navButtons).map(b => b.getAttribute('data-main-tab'));
+
+    function activateTab(tabId) {
+        const btn = document.querySelector(`.nav-button[data-main-tab="${tabId}"]`);
+        const pane = document.getElementById(tabId);
+        if (!btn || !pane) return;
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.main-tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        pane.classList.add('active');
+        debugLog(`Switched to tab: ${tabId}`, 'INFO');
+    }
+
     navButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const tabId = this.getAttribute('data-main-tab');
-            
-            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.main-tab-pane').forEach(pane => pane.classList.remove('active'));
-            
-            this.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
-            debugLog(`Switched to tab: ${tabId}`, 'INFO');
+            activateTab(this.getAttribute('data-main-tab'));
         });
     });
+
+    // Swipe left/right to move between adjacent tabs
+    const swipeArea = document.querySelector('.main-tab-content');
+    if (swipeArea) {
+        let startX = 0, startY = 0, tracking = false;
+        swipeArea.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) { tracking = false; return; }
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            tracking = true;
+        }, { passive: true });
+        swipeArea.addEventListener('touchend', (e) => {
+            if (!tracking) return;
+            tracking = false;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - startX;
+            const dy = t.clientY - startY;
+            // Horizontal swipe only: enough X travel, and mostly horizontal
+            if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+            const current = document.querySelector('.main-tab-pane.active');
+            if (!current) return;
+            let idx = tabOrder.indexOf(current.id);
+            if (idx === -1) return;
+            // Swipe left (dx<0) -> next tab; swipe right (dx>0) -> previous tab
+            idx += dx < 0 ? 1 : -1;
+            if (idx < 0 || idx >= tabOrder.length) return;
+            activateTab(tabOrder[idx]);
+        }, { passive: true });
+    }
 }
 
 async function loadStatus() {
