@@ -1361,8 +1361,9 @@ async function initializeUI(accPath) {
     if (rebuildSwitches) rebuildSwitches.addEventListener('click', async () => {
         if (!confirm("Rebuild the full switch list? This restarts the daemon in init mode and briefly interrupts charging.")) return;
         const container = document.getElementById('switches-list');
-        if (container) container.textContent = 'Rebuilding switch pool...';
+        if (container) container.textContent = 'Rebuilding switch pool... this can take up to a minute.';
         const acc = globalAccPath || 'acc';
+        window.__accBusy = true;  // pause auto status/log refresh while the daemon is in init mode
         try {
             // ch-switches is only regenerated when the daemon starts in init mode, which happens
             // when .batt-interface.sh is absent. Remove it, then restart: the daemon runs
@@ -1373,14 +1374,25 @@ async function initializeUI(accPath) {
                 `${acc} -D stop >/dev/null 2>&1; ` +
                 `rm -f /dev/.vr25/acc/.batt-interface.sh; ` +
                 `nohup setsid ${acc} -D restart >/dev/null 2>&1 &`], 12000);
-            // Init-mode startup scans power_supply, so give it longer before re-reading
-            await new Promise(r => setTimeout(r, 9000));
+            // Init-mode scan can take a while on slow devices. Poll until .batt-interface.sh is
+            // recreated (daemon finished init) rather than waiting a fixed time. Up to ~60s.
+            let ready = false;
+            for (let i = 0; i < 30; i++) {
+                await new Promise(r => setTimeout(r, 2000));
+                try {
+                    const c = await commandExecutor.execRaw('sh', ['-c',
+                        '[ -f /dev/.vr25/acc/.batt-interface.sh ] && echo ready'], 5000);
+                    if ((c.stdout || '').includes('ready')) { ready = true; break; }
+                } catch (e) { /* keep polling */ }
+            }
             await loadSwitchesList();
-            showError("Switch list rebuilt", 'success');
-            await logManager.info("Switch pool rebuilt via init-mode restart");
+            showError(ready ? "Switch list rebuilt" : "Rebuild taking longer than expected; list may be partial", ready ? 'success' : 'info');
+            await logManager.info(`Switch pool rebuilt via init-mode restart (ready=${ready})`);
         } catch (e) {
             showError(`Rebuild failed: ${e}`);
             await loadSwitchesList();
+        } finally {
+            window.__accBusy = false;
         }
     });
     const applySwitchesBtn = document.getElementById('apply-switches');
@@ -1438,8 +1450,8 @@ async function initializeUI(accPath) {
         }
     });
 
-    setInterval(loadStatus, 10000);
-    setInterval(loadLogs, 30000);
+    setInterval(() => { if (!window.__accBusy) loadStatus(); }, 10000);
+    setInterval(() => { if (!window.__accBusy) loadLogs(); }, 30000);
 }
 
 function initializeMainTabs() {

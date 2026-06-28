@@ -1,3 +1,6 @@
+**v1.1-test26 (versionCode 56)**
+- WebUI: Rebuild polls for the daemon to finish init (up to ~60s) and pauses auto status refresh, stopping the timeout spam
+
 **v1.1-test25 (versionCode 55)**
 - WebUI: Rebuild now removes .batt-interface.sh and restarts so the daemon regenerates the full switch pool in init mode
 
