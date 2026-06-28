@@ -1,3 +1,7 @@
+**v1.1-test22 (versionCode 51)**
+- WebUI: drop acc -p from the switch list; use ch-switches and working-switches like ACC's own acc -ss
+- WebUI: add Rebuild button that restarts the daemon to regenerate the full switch pool
+
 **v1.1-test21 (versionCode 49)**
 - WebUI: Enable/Disable Switches modal scrolls properly on small screens instead of moving the background
 - WebUI: switch list now also includes candidates from acc -p, dropping full-path /sys nodes

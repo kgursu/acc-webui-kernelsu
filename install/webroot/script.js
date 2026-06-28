@@ -1236,22 +1236,17 @@ async function initializeUI(accPath) {
         const container = document.getElementById('switches-list');
         if (!container) return;
         container.textContent = 'Loading switches...';
-        const accCmd = (typeof globalAccPath !== 'undefined' && globalAccPath) || 'acc';
-        const [pool, working, excluded, hashed, parsed] = await Promise.all([
+        const [pool, working, excluded, hashed] = await Promise.all([
             readLines(CH_SWITCHES), readLines(WORKING_SWITCHES),
-            readLines(EXCLUDED_FILE), readHashedNames(),
-            // acc -p lists every candidate switch from power_supply (the full test pool)
-            commandExecutor.execRaw(accCmd, ['-p'], 20000)
-                .then(r => (r.stdout || '').split('\n').map(l => l.trim()).filter(Boolean))
-                .catch(() => [])
+            readLines(EXCLUDED_FILE), readHashedNames()
         ]);
         const excludedSet = new Set(excluded);
         const workingLines = working.map(stripWorkingTag).filter(l => l.length > 0);
-        // From acc -p, keep only short-form switches (category/name value value), dropping
-        // full /sys/... node paths which are noise the user shouldn't need to toggle.
-        const parsedLines = parsed.filter(l => !l.startsWith('/') && /^\S+\/\S+\s+\S+\s+\S+/.test(l));
-        // Union of: tested switches, candidate pool, live pool, and our excluded lines.
-        const all = Array.from(new Set([...workingLines, ...parsedLines, ...pool, ...excluded])).sort();
+        // ch-switches is ACC's own list: ls_ch_switches patterns matched against real device
+        // files, then cleaned by oem-custom.sh. working-switches.log adds tested variants.
+        // Both are authoritative; we don't pull from acc -p, which scans power_supply broadly
+        // and returns nodes ACC doesn't treat as charging switches.
+        const all = Array.from(new Set([...workingLines, ...pool, ...excluded])).sort();
         if (all.length === 0) {
             container.textContent = 'No switches found. Run Test Switches once to populate the list.';
             return;
@@ -1347,6 +1342,27 @@ async function initializeUI(accPath) {
     });
     const refreshSwitches = document.getElementById('refresh-switches');
     if (refreshSwitches) refreshSwitches.addEventListener('click', loadSwitchesList);
+    const rebuildSwitches = document.getElementById('rebuild-switches');
+    if (rebuildSwitches) rebuildSwitches.addEventListener('click', async () => {
+        if (!confirm("Restart the daemon to rebuild the full switch list? Charging is interrupted for a few seconds.")) return;
+        const container = document.getElementById('switches-list');
+        if (container) container.textContent = 'Rebuilding switch pool...';
+        const acc = globalAccPath || 'acc';
+        try {
+            // Restarting the daemon re-runs ch-switches generation (ls_ch_switches + oem-custom),
+            // producing the full untested pool. Re-enable charging first as a safety net.
+            await commandExecutor.execRaw('su', ['-c',
+                `${acc} -e >/dev/null 2>&1; nohup setsid ${acc} -D restart >/dev/null 2>&1 &`], 12000);
+            // Give the daemon time to regenerate ch-switches before re-reading
+            await new Promise(r => setTimeout(r, 6000));
+            await loadSwitchesList();
+            showError("Switch list rebuilt", 'success');
+            await logManager.info("Switch pool rebuilt via daemon restart");
+        } catch (e) {
+            showError(`Rebuild failed: ${e}`);
+            await loadSwitchesList();
+        }
+    });
     const applySwitchesBtn = document.getElementById('apply-switches');
     if (applySwitchesBtn) applySwitchesBtn.addEventListener('click', applySwitches);
 

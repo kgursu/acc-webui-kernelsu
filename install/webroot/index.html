@@ -454,8 +454,12 @@
                 </p>
                 <div class="button-group">
                     <button id="refresh-switches">Refresh</button>
+                    <button id="rebuild-switches">Rebuild</button>
                     <button id="apply-switches">Apply</button>
                 </div>
+                <p style="color: var(--text-secondary); font-size: 12px; margin: 8px 0 0 0;">
+                    Refresh re-reads the current list. Rebuild restarts the daemon to regenerate the full switch pool from scratch, which briefly interrupts charging.
+                </p>
                 <div id="switches-list" style="margin-top: 12px;">Loading switches...</div>
             </div>
         </div>
