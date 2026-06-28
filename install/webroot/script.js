@@ -1359,20 +1359,25 @@ async function initializeUI(accPath) {
     if (refreshSwitches) refreshSwitches.addEventListener('click', loadSwitchesList);
     const rebuildSwitches = document.getElementById('rebuild-switches');
     if (rebuildSwitches) rebuildSwitches.addEventListener('click', async () => {
-        if (!confirm("Restart the daemon to rebuild the full switch list? Charging is interrupted for a few seconds.")) return;
+        if (!confirm("Rebuild the full switch list? This restarts the daemon in init mode and briefly interrupts charging.")) return;
         const container = document.getElementById('switches-list');
         if (container) container.textContent = 'Rebuilding switch pool...';
         const acc = globalAccPath || 'acc';
         try {
-            // Restarting the daemon re-runs ch-switches generation (ls_ch_switches + oem-custom),
-            // producing the full untested pool. Re-enable charging first as a safety net.
+            // ch-switches is only regenerated when the daemon starts in init mode, which happens
+            // when .batt-interface.sh is absent. Remove it, then restart: the daemon runs
+            // ls_ch_switches and rebuilds the full pool (and recreates .batt-interface.sh itself).
+            // Re-enable charging first as a safety net.
             await commandExecutor.execRaw('su', ['-c',
-                `${acc} -e >/dev/null 2>&1; nohup setsid ${acc} -D restart >/dev/null 2>&1 &`], 12000);
-            // Give the daemon time to regenerate ch-switches before re-reading
-            await new Promise(r => setTimeout(r, 6000));
+                `${acc} -e >/dev/null 2>&1; ` +
+                `${acc} -D stop >/dev/null 2>&1; ` +
+                `rm -f /dev/.vr25/acc/.batt-interface.sh; ` +
+                `nohup setsid ${acc} -D restart >/dev/null 2>&1 &`], 12000);
+            // Init-mode startup scans power_supply, so give it longer before re-reading
+            await new Promise(r => setTimeout(r, 9000));
             await loadSwitchesList();
             showError("Switch list rebuilt", 'success');
-            await logManager.info("Switch pool rebuilt via daemon restart");
+            await logManager.info("Switch pool rebuilt via init-mode restart");
         } catch (e) {
             showError(`Rebuild failed: ${e}`);
             await loadSwitchesList();

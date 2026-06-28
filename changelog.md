@@ -1,3 +1,6 @@
+**v1.1-test25 (versionCode 55)**
+- WebUI: Rebuild now removes .batt-interface.sh and restarts so the daemon regenerates the full switch pool in init mode
+
 **v1.1-test24 (versionCode 54)**
 - WebUI: read the switch list via "acca -s s:" (ACC's own front-end command), falling back to the file
 
