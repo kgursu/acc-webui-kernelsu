@@ -1,3 +1,6 @@
+**v1.1-test28 (versionCode 58)**
+- WebUI: remove Rebuild; init-mode restart left the daemon unable to detach and stopped status updates. Run Test Switches once to discover the full pool instead.
+
 **v1.1-test27 (versionCode 57)**
 - WebUI: Rebuild runs the daemon restart synchronously (waits for init to finish, up to 2 min) instead of polling, matching the working terminal flow
 

@@ -1357,35 +1357,6 @@ async function initializeUI(accPath) {
     });
     const refreshSwitches = document.getElementById('refresh-switches');
     if (refreshSwitches) refreshSwitches.addEventListener('click', loadSwitchesList);
-    const rebuildSwitches = document.getElementById('rebuild-switches');
-    if (rebuildSwitches) rebuildSwitches.addEventListener('click', async () => {
-        if (!confirm("Rebuild the full switch list? This restarts the daemon in init mode and briefly interrupts charging.")) return;
-        const container = document.getElementById('switches-list');
-        if (container) container.textContent = 'Rebuilding switch pool... this can take a minute, please wait.';
-        const acc = globalAccPath || 'acc';
-        window.__accBusy = true;  // pause auto status/log refresh while the daemon is in init mode
-        try {
-            // ch-switches is only regenerated when the daemon starts in init mode, which happens
-            // when .batt-interface.sh is absent. Remove it, then restart synchronously: acc -D
-            // restart runs the init scan (ls_ch_switches) and only returns once accd has started,
-            // exactly like running it in a terminal. We wait for that with a long timeout instead
-            // of backgrounding it. acc -e first as a safety net so charging isn't left off.
-            await commandExecutor.execRaw('su', ['-c',
-                `${acc} -e >/dev/null 2>&1; ` +
-                `${acc} -D stop >/dev/null 2>&1; ` +
-                `rm -f /dev/.vr25/acc/.batt-interface.sh; ` +
-                `${acc} -D restart`], 120000);
-            // Daemon has finished init by the time the command returns; ch-switches is ready.
-            await loadSwitchesList();
-            showError("Switch list rebuilt", 'success');
-            await logManager.info("Switch pool rebuilt via init-mode restart");
-        } catch (e) {
-            showError(`Rebuild failed or timed out: ${e}`);
-            await loadSwitchesList();
-        } finally {
-            window.__accBusy = false;
-        }
-    });
     const applySwitchesBtn = document.getElementById('apply-switches');
     if (applySwitchesBtn) applySwitchesBtn.addEventListener('click', applySwitches);
 
