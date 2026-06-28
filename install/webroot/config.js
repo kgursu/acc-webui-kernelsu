@@ -167,9 +167,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         document.getElementById('test-functionality-btn').addEventListener('click', async () => {
-            if (!confirm("This will test ACC functionality by toggling charging on/off. Continue?")) return;
+            if (!confirm("This will test charging control by toggling charging off then on. Continue?")) return;
             
-            showError("Testing ACC functionality...", 'info');
+            showError("Testing charging control...", 'info');
             try {
                 await executeAccCommand(['-d']);
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -180,15 +180,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const status2 = await executeAccCommand(['-i']);
                 
                 if (status1.includes('Discharging') || status1.includes('Not charging')) {
-                    showError("✅ ACC functionality test passed!", 'success');
+                    showError("✅ Charging control works!", 'success');
                 } else {
                     showError("⚠️ ACC test completed but results inconclusive. Check logs.", 'info');
                 }
                 
                 setTimeout(hideError, 5000);
-                logManager.info("Functionality test completed");
+                logManager.info("Charging control test completed");
             } catch (e) {
-                showError(`Functionality test failed: ${e}`, 'error');
+                showError(`Charging control test failed: ${e}`, 'error');
                 logManager.error(`Test error: ${e}`);
             }
         });

@@ -1,3 +1,7 @@
+**v1.1-test23 (versionCode 53)**
+- WebUI: rename Test All Features to Test Charging Control to reflect what it does
+- WebUI: show the underlying command under Test Switches (acc -t) and Test Charging Control (acc -d / acc -e)
+
 **v1.1-test22 (versionCode 51)**
 - WebUI: drop acc -p from the switch list; use ch-switches and working-switches like ACC's own acc -ss
 - WebUI: add Rebuild button that restarts the daemon to regenerate the full switch pool
