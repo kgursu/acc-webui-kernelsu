@@ -1,3 +1,7 @@
+**v1.1-test19 (versionCode 46)**
+- WebUI: switches blacklisted in write.log show in red with a write.log tag in Enable/Disable Switches
+- WebUI: warning explains that re-enabling a red switch removes its write.log skip mark
+
 **v1.1-test18 (versionCode 44)**
 - WebUI: Enable/Disable Switches lists every tested switch from working-switches.log, matching the Test Switches count
 - WebUI: Disabled Switches shows the switch names (with variant counts) instead of just a number

@@ -1244,7 +1244,8 @@ async function initializeUI(accPath) {
         all.forEach((line) => {
             // A line counts as disabled if we excluded the exact line, or write.log skips its name
             const name = switchName(line);
-            const disabled = excludedSet.has(line) || hashed.has(name);
+            const inWriteLog = hashed.has(name);
+            const disabled = excludedSet.has(line) || inWriteLog;
             const row = document.createElement('label');
             row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(0,0,0,0.06); cursor:pointer; font-family:monospace; font-size:12px;';
             const cb = document.createElement('input');
@@ -1255,6 +1256,15 @@ async function initializeUI(accPath) {
             const span = document.createElement('span');
             span.textContent = line;
             span.style.cssText = 'word-break:break-all;';
+            // Switches commented out in write.log are shown in red: unchecking nothing, but
+            // re-enabling them removes ACC's skip mark, which may have protected the device.
+            if (inWriteLog) {
+                span.style.color = 'var(--bad)';
+                const tag = document.createElement('span');
+                tag.textContent = 'write.log';
+                tag.style.cssText = 'margin-left:6px; font-size:10px; color:var(--bad); border:1px solid var(--bad); border-radius:4px; padding:1px 4px; white-space:nowrap;';
+                span.appendChild(tag);
+            }
             row.appendChild(cb);
             row.appendChild(span);
             container.appendChild(row);
