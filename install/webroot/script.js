@@ -456,11 +456,12 @@ async function verifySystem() {
         }
 
         const ACC_PATHS = [
-            '/data/adb/vr25/acc/acc',
             '/data/adb/modules/acc/acc.sh',
+            '/data/adb/vr25/acc/acc.sh',
+            '/data/adb/vr25/acc/acc',
             '/dev/acc',
-            '/system/bin/acc',
-            '/data/adb/vr25/bin/acc'
+            '/data/adb/vr25/bin/acc',
+            '/system/bin/acc'
         ];
 
         for (const path of ACC_PATHS) {
@@ -752,8 +753,9 @@ async function initializeUI(accPath) {
 
     startBtn.addEventListener('click', async () => {
         try {
+            // acc -D start can fail to detach after a stop; restart works whether running or not
             await commandExecutor.execRaw('su', ['-c',
-                `nohup setsid ${accPath || 'acc'} -D start >/dev/null 2>&1 &`], 10000);
+                `nohup setsid ${accPath || 'acc'} -D restart >/dev/null 2>&1 &`], 10000);
             await logManager.info("accd started");
             await new Promise(resolve => setTimeout(resolve, 1500));
             await loadStatus();
@@ -1124,6 +1126,33 @@ async function initializeUI(accPath) {
     });
     const refreshPromptLog = document.getElementById('refresh-prompt-log');
     if (refreshPromptLog) refreshPromptLog.addEventListener('click', loadPromptLog);
+    const copyPromptLog = document.getElementById('copy-prompt-log');
+    if (copyPromptLog) copyPromptLog.addEventListener('click', async () => {
+        const out = document.getElementById('prompt-log-output');
+        const text = out ? out.textContent : '';
+        if (!text || text === 'No prompts logged yet.') {
+            showError("Nothing to copy", 'info');
+            return;
+        }
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for WebViews without async clipboard API
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            showError("Prompt log copied to clipboard", 'success');
+        } catch (e) {
+            showError(`Copy failed: ${e}`);
+        }
+    });
     const clearPromptLog = document.getElementById('clear-prompt-log');
     if (clearPromptLog) clearPromptLog.addEventListener('click', async () => {
         try {

@@ -1,3 +1,7 @@
+**v1.1-test7 (versionCode 17)**
+- WebUI: prioritize reliable absolute ACC paths to fix "inaccessible or not found" on some ROMs
+- WebUI: add Copy All button to the Prompt Log viewer
+
 **v1.1-test6 (versionCode 15)**
 - WebUI: daemon status now reflects real state (acc -D) so Stop updates Current Status
 - WebUI: prompts are saved to a timestamped log, viewable via a new Prompt Log button in Logs
