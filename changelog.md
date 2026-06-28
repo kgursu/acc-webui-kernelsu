@@ -1,3 +1,6 @@
+**v1.1-test31 (versionCode 62)**
+- WebUI: Active Switch shows "Automatic" instead of empty quotes when no switch is fixed
+
 **v1.1-test30 (versionCode 61)**
 - WebUI: Config page shows the Active Switch (the one the daemon uses, or Automatic)
 - WebUI: clarify that disabling a switch removes it from both testing and automatic use

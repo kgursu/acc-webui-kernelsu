@@ -230,7 +230,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show which switch the daemon uses on the Config summary card.
             const activeEl = document.getElementById('active-switch');
             if (activeEl) {
-                const cs = (configMap.charging_switch || '').trim();
+                // charging_switch can come back as "", '', () or empty when in auto mode.
+                // Strip surrounding quotes/parens/space; anything left is the real switch.
+                const cs = (configMap.charging_switch || '')
+                    .replace(/^[\s"'()]+|[\s"'()]+$/g, '').trim();
                 activeEl.textContent = cs ? cs : 'Automatic';
             }
             document.getElementById('batt-status-override').value = configMap.batt_status_override || '';
