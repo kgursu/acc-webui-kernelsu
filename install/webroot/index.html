@@ -141,6 +141,7 @@
                         <button id="test-switches-btn">Test Switches</button>
                         <button id="reset-switches-btn">Reset Switches</button>
                         <button id="enable-disable-switches-btn">Enable/Disable Switches</button>
+                        <button id="logtail-btn">Log Monitor</button>
                     </div>
                     <h2>Configuration Settings</h2>
                     
@@ -332,7 +333,6 @@
                         <button id="rollback-btn">Rollback</button>
                         <button id="version-btn">Show Version</button>
                         <button id="readme-btn">Open Manual</button>
-                        <button id="logtail-btn">Log Monitor</button>
                     </div>
                 </div>
             </div>
@@ -340,31 +340,27 @@
             <div id="settings-tab" class="main-tab-pane">
                 <div class="card" id="settings-panel" style="display: none;">
                     <h2>UI</h2>
-                    <div class="tab-content">
-                        <div class="tab-pane active">
-                            <div class="config-item">
-                                <label for="debug-mode-toggle">Enable Debug Console:</label>
-                                <select id="debug-mode-toggle">
-                                    <option value="false">Disabled</option>
-                                    <option value="true">Enabled</option>
-                                </select>
-                                <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
-                                    Show debug console on all pages for troubleshooting
-                                </small>
-                            </div>
-                            <div class="config-item config-item-block">
-                                <label for="update-channel-select">Update Channel:</label>
-                                <div class="config-item-controls">
-                                    <select id="update-channel-select">
-                                        <option value="stable">Stable</option>
-                                        <option value="beta">Beta (includes pre-releases)</option>
-                                    </select>
-                                    <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
-                                        Beta receives test builds first. Changes which update feed the module checks.
-                                    </small>
-                                    <button id="apply-channel-btn" style="margin-top: 10px;">Apply Channel</button>
-                                </div>
-                            </div>
+                    <div class="config-item">
+                        <label for="debug-mode-toggle">Enable Debug Console:</label>
+                        <select id="debug-mode-toggle">
+                            <option value="false">Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                        <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
+                            Show debug console on all pages for troubleshooting
+                        </small>
+                    </div>
+                    <div class="config-item config-item-block">
+                        <label for="update-channel-select">Update Channel:</label>
+                        <div class="config-item-controls">
+                            <select id="update-channel-select">
+                                <option value="stable">Stable</option>
+                                <option value="beta">Beta (includes pre-releases)</option>
+                            </select>
+                            <small style="display: block; margin-top: 8px; color: var(--text-secondary); font-size: 12px;">
+                                Beta receives test builds first. Changes which update feed the module checks.
+                            </small>
+                            <button id="apply-channel-btn" style="margin-top: 10px;">Apply Channel</button>
                         </div>
                     </div>
                 </div>

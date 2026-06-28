@@ -1,8 +1,8 @@
 id=acc
 domain=vr25
 name=Advanced Charging Controller - WebUI
-version=v1.1-test11
-versionCode=27
+version=v1.1-test12
+versionCode=30
 author=Farrukh2002 · APatch/FolkPatch compat by Claude (kgursu)
 description=Extend your battery's service life by controlling charging current, temperature, and voltage. Any root solution is supported. The installation is always "systemless". Works on Android and KaiOS.
 updateJson=https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/module.json

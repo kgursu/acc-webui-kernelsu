@@ -458,6 +458,10 @@ button.loading::after {
 .button-group button {
     margin: 0;
     width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.25;
+    min-height: 44px;
 }
 
 .log-container {

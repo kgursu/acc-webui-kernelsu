@@ -1,3 +1,8 @@
+**v1.1-test12 (versionCode 30)**
+- WebUI: button labels wrap instead of clipping on narrow screens (Enable/Disable Switches)
+- WebUI: move Log Monitor to the Config page next to Enable/Disable Switches
+- WebUI: fix UI page not rendering its contents
+
 **v1.1-test11 (versionCode 27)**
 - WebUI: move Test Switches from Status to the Config page, before Reset Switches
 - WebUI: move Configuration Settings (Basic, Limits, Advanced, Cooldown) and its action buttons to the Config page
