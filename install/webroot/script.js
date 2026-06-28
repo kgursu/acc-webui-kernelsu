@@ -1168,6 +1168,7 @@ async function initializeUI(accPath) {
     // ch-switches holds the test pool (one switch per line, e.g. "battery/charging_enabled 1 0").
     // We keep our own persistent exclusion file; service.sh removes those lines from ch-switches on boot.
     const CH_SWITCHES = '/dev/.vr25/acc/ch-switches';
+    const WORKING_SWITCHES = '/data/adb/vr25/acc-data/logs/working-switches.log';
     const EXCLUDED_FILE = '/data/adb/vr25/acc-data/webui-excluded-switches';
     const WRITE_LOG = '/data/adb/vr25/acc-data/logs/write.log';
 
@@ -1197,21 +1198,44 @@ async function initializeUI(accPath) {
         const el = document.getElementById('disabled-switches-count');
         if (!el) return;
         const [excluded, hashed] = await Promise.all([readLines(EXCLUDED_FILE), readHashedNames()]);
-        // Count unique disabled switch names: our excluded lines plus write.log "#name" entries
-        const names = new Set([...excluded.map(switchName), ...hashed]);
-        el.textContent = names.size === 0 ? 'None' : String(names.size);
+        // Group disabled entries by switch name, counting variants from our exclusion file.
+        const counts = new Map();
+        for (const line of excluded) {
+            const n = switchName(line);
+            counts.set(n, (counts.get(n) || 0) + 1);
+        }
+        // write.log "#name" entries are name-level (no variant), include them if not already listed
+        for (const n of hashed) {
+            if (!counts.has(n)) counts.set(n, 1);
+        }
+        if (counts.size === 0) {
+            el.textContent = 'None';
+            return;
+        }
+        const parts = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([n, c]) => c > 1 ? `${n} (${c} types)` : n);
+        el.textContent = parts.join(', ');
+    }
+
+    // working-switches.log lists every switch ACC tested, tagged like "[d] name v1 v2".
+    // Strip the tag to get the bare "name v1 v2" line, matching our ch-switches format.
+    function stripWorkingTag(line) {
+        return line.replace(/^\[[a-z]\]\s+/i, '').replace(/\s*\{[^}]*\}\s*$/, '').trim();
     }
 
     async function loadSwitchesList() {
         const container = document.getElementById('switches-list');
         if (!container) return;
         container.textContent = 'Loading switches...';
-        const [pool, excluded, hashed] = await Promise.all([
-            readLines(CH_SWITCHES), readLines(EXCLUDED_FILE), readHashedNames()
+        const [pool, working, excluded, hashed] = await Promise.all([
+            readLines(CH_SWITCHES), readLines(WORKING_SWITCHES),
+            readLines(EXCLUDED_FILE), readHashedNames()
         ]);
         const excludedSet = new Set(excluded);
-        // Union of the live pool and our excluded lines, so disabled lines still show (unticked)
-        const all = Array.from(new Set([...pool, ...excluded])).sort();
+        const workingLines = working.map(stripWorkingTag).filter(l => l.length > 0);
+        // Show every switch ACC tested (working-switches.log) plus the live pool and our excluded
+        // lines, so variants that didn't end up in ch-switches are still selectable.
+        const all = Array.from(new Set([...workingLines, ...pool, ...excluded])).sort();
         if (all.length === 0) {
             container.textContent = 'No switches found. Run Test Switches once to populate the list.';
             return;

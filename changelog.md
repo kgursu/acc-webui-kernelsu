@@ -1,3 +1,7 @@
+**v1.1-test18 (versionCode 44)**
+- WebUI: Enable/Disable Switches lists every tested switch from working-switches.log, matching the Test Switches count
+- WebUI: Disabled Switches shows the switch names (with variant counts) instead of just a number
+
 **v1.1-test17 (versionCode 42)**
 - WebUI: separate Configuration Settings from the buttons above with more space and a divider
 - WebUI: tighten the gap above the first config field
