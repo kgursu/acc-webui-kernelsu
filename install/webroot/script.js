@@ -230,7 +230,14 @@ function showError(message, type = 'error') {
     errorBox.style.pointerEvents = 'auto';
     errorBox.onclick = hideError;
     debugLog(`${type.toUpperCase()}: ${message}`, 'INFO');
-    // auto-dismiss; success/info shorter, errors longer
+    // Persist every prompt to a dedicated, timestamped WebUI prompt log
+    try {
+        const ts = new Date().toISOString();
+        const safe = String(message).replace(/'/g, "'\\''");
+        const line = `[${ts}] [${type.toUpperCase()}] ${safe}`;
+        commandExecutor.execRaw('sh', ['-c',
+            `echo '${line}' >> /data/adb/vr25/acc-data/logs/webui-prompts.log`], 5000).catch(() => {});
+    } catch (e) { /* non-fatal */ }
     clearTimeout(window._errTimer);
     window._errTimer = setTimeout(hideError, (type === 'error' || type === 'warn') ? 6000 : 4000);
 }
@@ -304,8 +311,19 @@ async function updateStatus() {
             }
         });
 
-        // Update daemon status
-        document.getElementById('daemon-status').textContent = 'Running';
+        // Update daemon status by querying ACC directly (acc -D => "accd," running / "accd." stopped)
+        let daemonRunning = true;
+        try {
+            const d = await commandExecutor.execRaw(globalAccPath, ['-D'], 5000);
+            const dout = (d.stdout || '').trim();
+            if (/accd\.|not running|stopped|isn't running/i.test(dout)) {
+                daemonRunning = false;
+            } else if (/accd,|running/i.test(dout)) {
+                daemonRunning = true;
+            }
+        } catch (e) { /* keep default */ }
+
+        document.getElementById('daemon-status').textContent = daemonRunning ? 'Running' : 'Stopped';
         
         // Battery level - extract from "level 75%" format or raw number
         let batteryLevel = '0';
@@ -354,7 +372,7 @@ async function updateStatus() {
             realLevelElement.textContent = status.real_level || 'N/A';
         }
 
-        updateStatusClass(document.getElementById('daemon-status'), 'Running');
+        updateStatusClass(document.getElementById('daemon-status'), daemonRunning ? 'Running' : 'Stopped');
         updateStatusClass(document.getElementById('charging-status'), document.getElementById('charging-status').textContent);
 
         hideError();
@@ -546,6 +564,7 @@ async function initializeUI(accPath) {
     const refreshLogsBtn = document.getElementById('refresh-logs-btn');
     const exportLogsBtn = document.getElementById('export-logs-btn');
     const clearLogsBtn = document.getElementById('clear-logs-btn');
+    const promptLogBtn = document.getElementById('prompt-log-btn');
     const upgradeBtn = document.getElementById('upgrade-btn');
     const uninstallBtn = document.getElementById('uninstall-btn');
     const rollbackBtn = document.getElementById('rollback-btn');
@@ -1077,6 +1096,43 @@ async function initializeUI(accPath) {
     document.getElementById('close-test-switches').addEventListener('click', () => {
         window._switchTestRunning = false;
         document.getElementById('test-switches-modal').style.display = 'none';
+    });
+
+    // Prompt log viewer
+    const PROMPT_LOG = '/data/adb/vr25/acc-data/logs/webui-prompts.log';
+    async function loadPromptLog() {
+        const out = document.getElementById('prompt-log-output');
+        if (!out) return;
+        try {
+            const res = await commandExecutor.execRaw('sh', ['-c', `tail -n 200 ${PROMPT_LOG} 2>/dev/null`], 8000);
+            const txt = (res.stdout || '').trim();
+            out.textContent = txt || 'No prompts logged yet.';
+            out.scrollTop = out.scrollHeight;
+        } catch (e) {
+            out.textContent = `Could not read prompt log: ${e}`;
+        }
+    }
+    if (promptLogBtn) {
+        promptLogBtn.addEventListener('click', () => {
+            document.getElementById('prompt-log-modal').style.display = 'block';
+            loadPromptLog();
+        });
+    }
+    const closePromptLog = document.getElementById('close-prompt-log');
+    if (closePromptLog) closePromptLog.addEventListener('click', () => {
+        document.getElementById('prompt-log-modal').style.display = 'none';
+    });
+    const refreshPromptLog = document.getElementById('refresh-prompt-log');
+    if (refreshPromptLog) refreshPromptLog.addEventListener('click', loadPromptLog);
+    const clearPromptLog = document.getElementById('clear-prompt-log');
+    if (clearPromptLog) clearPromptLog.addEventListener('click', async () => {
+        try {
+            await commandExecutor.execRaw('sh', ['-c', `: > ${PROMPT_LOG}`], 5000);
+            loadPromptLog();
+            showError("Prompt log cleared", 'success');
+        } catch (e) {
+            showError(`Failed to clear prompt log: ${e}`);
+        }
     });
 
     // Close modals when clicking outside

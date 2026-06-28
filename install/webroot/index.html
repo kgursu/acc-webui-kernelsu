@@ -151,6 +151,7 @@
                         <button id="refresh-logs-btn">Refresh Logs</button>
                         <button id="export-logs-btn">Export Logs</button>
                         <button id="clear-logs-btn">Clear Logs</button>
+                        <button id="prompt-log-btn">Prompt Log</button>
                     </div>
                 </div>
             </div>
@@ -416,6 +417,19 @@
                     <button id="stop-test-switches" style="display: none;">Stop Test</button>
                 </div>
                 <pre id="test-switches-output" style="margin-top: 10px; max-height: 400px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+    </div>
+    <div id="prompt-log-modal" class="modal">
+        <div class="modal-content large-modal">
+            <span class="close" id="close-prompt-log">&times;</span>
+            <h2>WebUI Prompt Log</h2>
+            <div class="modal-body">
+                <div class="button-group">
+                    <button id="refresh-prompt-log">Refresh</button>
+                    <button id="clear-prompt-log">Clear</button>
+                </div>
+                <pre id="prompt-log-output" style="margin-top: 10px; max-height: 400px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; white-space: pre-wrap;">Loading...</pre>
             </div>
         </div>
     </div>

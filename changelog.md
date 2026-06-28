@@ -1,3 +1,7 @@
+**v1.1-test6 (versionCode 15)**
+- WebUI: daemon status now reflects real state (acc -D) so Stop updates Current Status
+- WebUI: prompts are saved to a timestamped log, viewable via a new Prompt Log button in Logs
+
 **v1.1-test5 (versionCode 13)**
 - WebUI: status values wrap only when too long, short ones stay inline on the right
 
