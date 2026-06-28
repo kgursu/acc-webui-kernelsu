@@ -227,14 +227,41 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('cooldown-charge').value = configMap.cooldown_charge || '';
             document.getElementById('cooldown-pause').value = configMap.cooldown_pause || '';
             document.getElementById('charging-switch').value = configMap.charging_switch || '';
-            // Show which switch the daemon uses on the Config summary card.
+            // Show which switch the daemon uses on the Config summary card. Try in order:
+            // 1) /dev/.vr25/acc/.sw  - the switch the daemon is using right now (only set while
+            //    charging is actively held off; usually empty otherwise)
+            // 2) config charging_switch - a fixed switch, or the last one auto mode wrote
+            // 3) first [d]/[i] tagged line in working-switches.log - the one auto mode will most
+            //    likely pick (a guess, labelled as such)
             const activeEl = document.getElementById('active-switch');
             if (activeEl) {
-                // charging_switch can come back as "", '', () or empty when in auto mode.
-                // Strip surrounding quotes/parens/space; anything left is the real switch.
-                const cs = (configMap.charging_switch || '')
-                    .replace(/^[\s"'()]+|[\s"'()]+$/g, '').trim();
-                activeEl.textContent = cs ? cs : 'Automatic';
+                const clean = s => (s || '').replace(/^[\s"'()]+|[\s"'()]+$/g, '').trim();
+                let label = 'Automatic';
+                try {
+                    // 1) live switch in use
+                    const sw = await commandExecutor.execRaw('sh', ['-c',
+                        `cat /dev/.vr25/acc/.sw 2>/dev/null`], 5000);
+                    const live = clean((sw.stdout || '').replace(/^chargingSwitch=/, ''));
+                    if (live) {
+                        label = live;
+                    } else {
+                        // 2) config value (fixed or last written)
+                        const cs = clean(configMap.charging_switch || '');
+                        if (cs) {
+                            label = cs;
+                        } else {
+                            // 3) likely pick from working-switches.log (guess)
+                            const ws = await commandExecutor.execRaw('sh', ['-c',
+                                `grep -E '^\\[[di]\\] ' /data/adb/vr25/acc-data/logs/working-switches.log 2>/dev/null | head -1`], 5000);
+                            const guess = clean((ws.stdout || '').replace(/^\[[di]\]\s*/, '').replace(/\{[^}]*\}/g, ''));
+                            label = guess ? `Automatic (likely: ${guess})` : 'Automatic';
+                        }
+                    }
+                } catch (e) {
+                    const cs = clean(configMap.charging_switch || '');
+                    label = cs || 'Automatic';
+                }
+                activeEl.textContent = label;
             }
             document.getElementById('batt-status-override').value = configMap.batt_status_override || '';
             document.getElementById('idle-apps').value = configMap.idle_apps || '';

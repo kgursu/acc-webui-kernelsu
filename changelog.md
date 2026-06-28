@@ -1,3 +1,6 @@
+**v1.1-test32 (versionCode 63)**
+- WebUI: Active Switch resolves in order: live switch in use (.sw), then config, then a labelled likely pick from working-switches.log
+
 **v1.1-test31 (versionCode 62)**
 - WebUI: Active Switch shows "Automatic" instead of empty quotes when no switch is fixed
 
