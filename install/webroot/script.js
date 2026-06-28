@@ -1197,23 +1197,32 @@ async function initializeUI(accPath) {
     async function updateDisabledSwitchesCount() {
         const el = document.getElementById('disabled-switches-count');
         if (!el) return;
-        const [excluded, hashed] = await Promise.all([readLines(EXCLUDED_FILE), readHashedNames()]);
-        // Group disabled entries by switch name, counting variants from our exclusion file.
-        const counts = new Map();
-        for (const line of excluded) {
+        const [excluded, hashed, working, pool] = await Promise.all([
+            readLines(EXCLUDED_FILE), readHashedNames(),
+            readLines(WORKING_SWITCHES), readLines(CH_SWITCHES)
+        ]);
+        // Build a map of switch name -> how many distinct variant lines exist for it,
+        // drawn from every switch we know about (tested pool + live pool + our excluded list).
+        const variantsByName = new Map();
+        const allLines = new Set([
+            ...working.map(stripWorkingTag).filter(Boolean),
+            ...pool, ...excluded
+        ]);
+        for (const line of allLines) {
             const n = switchName(line);
-            counts.set(n, (counts.get(n) || 0) + 1);
+            if (!variantsByName.has(n)) variantsByName.set(n, new Set());
+            variantsByName.get(n).add(line);
         }
-        // write.log "#name" entries are name-level (no variant), include them if not already listed
-        for (const n of hashed) {
-            if (!counts.has(n)) counts.set(n, 1);
-        }
-        if (counts.size === 0) {
+        // Disabled switch names: from our exclusion file (by name) and write.log "#name" marks
+        const disabledNames = new Set([...excluded.map(switchName), ...hashed]);
+        if (disabledNames.size === 0) {
             el.textContent = 'None';
             return;
         }
-        const parts = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([n, c]) => c > 1 ? `${n} (${c} types)` : n);
+        const parts = [...disabledNames].sort((a, b) => a.localeCompare(b)).map(n => {
+            const count = variantsByName.has(n) ? variantsByName.get(n).size : 1;
+            return count > 1 ? `${n} (${count} types)` : n;
+        });
         el.textContent = parts.join(', ');
     }
 
