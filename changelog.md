@@ -1,3 +1,8 @@
+**v1.1-test11 (versionCode 27)**
+- WebUI: move Test Switches from Status to the Config page, before Reset Switches
+- WebUI: move Configuration Settings (Basic, Limits, Advanced, Cooldown) and its action buttons to the Config page
+- WebUI: the UI page now holds Enable Debug Console and Update Channel under a UI heading
+
 **v1.1-test10 (versionCode 24)**
 - WebUI: add Disabled Switches count to the Config page
 - WebUI: add Enable/Disable Switches page to exclude problematic switches from Test Switches

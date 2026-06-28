@@ -111,7 +111,6 @@
                     <div class="button-group">
                         <button id="refresh-btn">Refresh Status</button>
                         <button id="battery-health-btn">Battery Health</button>
-                        <button id="test-switches-btn">Test Switches</button>
                         <button id="reset-battery-stats-btn">Reset Battery Stats</button>
                     </div>
                 </div>
@@ -139,49 +138,10 @@
                         </div>
                     </div>
                     <div class="button-group">
+                        <button id="test-switches-btn">Test Switches</button>
                         <button id="reset-switches-btn">Reset Switches</button>
                         <button id="enable-disable-switches-btn">Enable/Disable Switches</button>
                     </div>
-                </div>
-            </div>
-            
-            <div id="logs-tab" class="main-tab-pane">
-                <div class="card" id="log-panel" style="display: none;">
-                    <h2>Recent Logs</h2>
-                    <div class="log-container" id="log-display">Loading logs...</div>
-                    <div class="button-group">
-                        <button id="refresh-logs-btn">Refresh Logs</button>
-                        <button id="export-logs-btn">Export Logs</button>
-                        <button id="clear-logs-btn">Clear Logs</button>
-                        <button id="prompt-log-btn">Prompt Log</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="maintenance-tab" class="main-tab-pane">
-                <div class="card" id="maintenance-panel" style="display: none;">
-                    <h2>Service</h2>
-                    <div class="button-group">
-                        <button id="disable-charging-btn">Disable Charging</button>
-                        <button id="enable-charging-btn">Enable Charging</button>
-                        <button id="force-charge-btn">Force Charge</button>
-                        <button id="restart-btn">Restart Daemon</button>
-                        <button id="stop-btn">Stop Daemon</button>
-                        <button id="start-btn">Start Daemon</button>
-                    </div>
-                    <div class="button-group">
-                        <button id="upgrade-btn">Check for Updates</button>
-                        <button id="uninstall-btn">Uninstall ACC</button>
-                        <button id="rollback-btn">Rollback</button>
-                        <button id="version-btn">Show Version</button>
-                        <button id="readme-btn">Open Manual</button>
-                        <button id="logtail-btn">Log Monitor</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="settings-tab" class="main-tab-pane">
-                <div class="card" id="settings-panel" style="display: none;">
                     <h2>Configuration Settings</h2>
                     
                     <div class="tab-buttons-wrap">
@@ -190,7 +150,6 @@
                             <button class="tab-button" data-tab="limits-settings">Limits</button>
                             <button class="tab-button" data-tab="advanced-settings">Advanced</button>
                             <button class="tab-button" data-tab="cooldown-settings">Cooldown</button>
-                            <button class="tab-button" data-tab="ui-settings">UI</button>
                         </div>
                     </div>
                     
@@ -330,8 +289,59 @@
                                 <input type="number" id="cooldown-pause" min="0" step="1">
                             </div>
                         </div>
-                        
-                        <div id="ui-settings" class="tab-pane">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="load-config-btn">Load Current Config</button>
+                        <button id="save-config-btn">Save Configuration</button>
+                        <button id="save-profile-btn">Save as Profile</button>
+                        <button id="load-profile-btn">Load Profile</button>
+                        <button id="reset-config-btn">Reset to Defaults</button>
+                        <button id="test-functionality-btn">Test All Features</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="logs-tab" class="main-tab-pane">
+                <div class="card" id="log-panel" style="display: none;">
+                    <h2>Recent Logs</h2>
+                    <div class="log-container" id="log-display">Loading logs...</div>
+                    <div class="button-group">
+                        <button id="refresh-logs-btn">Refresh Logs</button>
+                        <button id="export-logs-btn">Export Logs</button>
+                        <button id="clear-logs-btn">Clear Logs</button>
+                        <button id="prompt-log-btn">Prompt Log</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="maintenance-tab" class="main-tab-pane">
+                <div class="card" id="maintenance-panel" style="display: none;">
+                    <h2>Service</h2>
+                    <div class="button-group">
+                        <button id="disable-charging-btn">Disable Charging</button>
+                        <button id="enable-charging-btn">Enable Charging</button>
+                        <button id="force-charge-btn">Force Charge</button>
+                        <button id="restart-btn">Restart Daemon</button>
+                        <button id="stop-btn">Stop Daemon</button>
+                        <button id="start-btn">Start Daemon</button>
+                    </div>
+                    <div class="button-group">
+                        <button id="upgrade-btn">Check for Updates</button>
+                        <button id="uninstall-btn">Uninstall ACC</button>
+                        <button id="rollback-btn">Rollback</button>
+                        <button id="version-btn">Show Version</button>
+                        <button id="readme-btn">Open Manual</button>
+                        <button id="logtail-btn">Log Monitor</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="settings-tab" class="main-tab-pane">
+                <div class="card" id="settings-panel" style="display: none;">
+                    <h2>UI</h2>
+                    <div class="tab-content">
+                        <div class="tab-pane active">
                             <div class="config-item">
                                 <label for="debug-mode-toggle">Enable Debug Console:</label>
                                 <select id="debug-mode-toggle">
@@ -357,18 +367,9 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="button-group">
-                        <button id="load-config-btn">Load Current Config</button>
-                        <button id="save-config-btn">Save Configuration</button>
-                        <button id="save-profile-btn">Save as Profile</button>
-                        <button id="load-profile-btn">Load Profile</button>
-                        <button id="reset-config-btn">Reset to Defaults</button>
-                        <button id="test-functionality-btn">Test All Features</button>
-                    </div>
                 </div>
             </div>
-        </div>
+            </div>
         
         <div class="bottom-nav">
             <button class="nav-button active" data-main-tab="status-tab">
