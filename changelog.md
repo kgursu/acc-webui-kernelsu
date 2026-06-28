@@ -1,3 +1,8 @@
+**v1.1-test4 (versionCode 12)**
+- WebUI: tab scroll indicators now show on both sides and appear without tapping first
+- WebUI: fix Stop/Restart daemon using acc -D commands instead of pkill (error 1)
+- WebUI: prompt background is now opaque
+
 **v1.1-test3 (versionCode 9)**
 - WebUI: rename app title to "ACC WebUI" on every page
 - WebUI: show ACC installation result on two lines when the path is long

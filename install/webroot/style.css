@@ -381,29 +381,46 @@ button.loading::after {
     margin-bottom: 20px;
 }
 
-/* Right fade + arrow shown when more tabs are scrollable */
-.tab-buttons-wrap.scrollable::after {
-    content: '›';
+/* Right indicator: shown when there is more to scroll to the right */
+.tab-buttons-wrap.can-right::after {
+    content: '\00BB';
     position: absolute;
     top: 0;
     right: 0;
     height: 100%;
-    width: 40px;
+    width: 44px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 8px;
-    font-size: 22px;
+    padding-right: 10px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--text-secondary);
-    background: linear-gradient(to right, transparent, var(--bg) 60%);
+    color: var(--green);
+    background: linear-gradient(to right, transparent, var(--bg) 65%);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     pointer-events: none;
+    z-index: 2;
 }
 
-/* Hide the indicator once scrolled to the end */
-.tab-buttons-wrap.scrolled-end::after {
-    opacity: 0;
+/* Left indicator: shown when scrolled away from the start */
+.tab-buttons-wrap.can-left::before {
+    content: '\00AB';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+    background: linear-gradient(to left, transparent, var(--bg) 65%);
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .tab-buttons {
@@ -525,10 +542,11 @@ button.loading::after {
     max-width: 90vw;
     width: max-content;
     min-width: 260px;
-    background: var(--bad-bg);
+    background: var(--card);
     padding: 16px 44px 16px 18px;
     border-radius: var(--radius-md);
     margin: 0;
+    border: 1px solid rgba(0,0,0,0.08);
     border-left: 4px solid var(--bad);
     color: var(--text);
     box-shadow: var(--shadow-md), 0 0 0 100vmax rgba(0,0,0,0.25);
@@ -554,17 +572,14 @@ button.loading::after {
 }
 
 .error-box.info {
-    background: var(--info-bg);
     border-left-color: var(--info);
 }
 
 .error-box.success {
-    background: var(--good-bg);
     border-left-color: var(--good);
 }
 
 .error-box.warn {
-    background: var(--warning-bg);
     border-left-color: var(--warning);
 }
 

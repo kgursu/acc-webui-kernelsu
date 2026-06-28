@@ -706,10 +706,12 @@ async function initializeUI(accPath) {
     restartBtn.addEventListener('click', async () => {
         try {
             await logManager.info("Restarting accd");
-            await commandExecutor.exec('pkill', ['-f', 'accd']);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await commandExecutor.exec(accPath, ['--init']);
+            // Use ACC's own daemon control; nohup+setsid keeps it alive on APatch/FolkPatch
+            await commandExecutor.execRaw('su', ['-c',
+                `nohup setsid ${accPath || 'acc'} -D restart >/dev/null 2>&1 &`], 10000);
+            await new Promise(resolve => setTimeout(resolve, 1500));
             await loadStatus();
+            showError("Daemon restarted", 'success');
         } catch (e) {
             showError(`Restart failed: ${e}`);
             await logManager.error(`Restart error: ${e}`);
@@ -718,9 +720,11 @@ async function initializeUI(accPath) {
 
     stopBtn.addEventListener('click', async () => {
         try {
-            await commandExecutor.exec('pkill', ['-f', 'accd']);
+            await commandExecutor.execRaw(accPath, ['-D', 'stop'], 10000);
             await logManager.info("accd stopped");
+            await new Promise(resolve => setTimeout(resolve, 800));
             await loadStatus();
+            showError("Daemon stopped", 'success');
         } catch (e) {
             showError(`Stop failed: ${e}`);
             await logManager.error(`Stop error: ${e}`);
@@ -729,9 +733,12 @@ async function initializeUI(accPath) {
 
     startBtn.addEventListener('click', async () => {
         try {
-            await commandExecutor.exec(accPath, ['--init']);
+            await commandExecutor.execRaw('su', ['-c',
+                `nohup setsid ${accPath || 'acc'} -D start >/dev/null 2>&1 &`], 10000);
             await logManager.info("accd started");
+            await new Promise(resolve => setTimeout(resolve, 1500));
             await loadStatus();
+            showError("Daemon started", 'success');
         } catch (e) {
             showError(`Start failed: ${e}`);
             await logManager.error(`Start error: ${e}`);
@@ -1168,15 +1175,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         showError("Initialization failed. Check console for details.");
     }
 });
-// Tab scroll indicator: show right arrow/fade when more tabs are off-screen
+// Tab scroll indicator: show « / » when more tabs exist off-screen on either side
 (function setupTabScrollIndicator() {
     function update(wrap) {
         const tabs = wrap.querySelector('.tab-buttons');
         if (!tabs) return;
-        const scrollable = tabs.scrollWidth > tabs.clientWidth + 2;
-        wrap.classList.toggle('scrollable', scrollable);
-        const atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 2;
-        wrap.classList.toggle('scrolled-end', atEnd);
+        const maxScroll = tabs.scrollWidth - tabs.clientWidth;
+        const canScroll = maxScroll > 2;
+        const x = tabs.scrollLeft;
+        wrap.classList.toggle('can-left', canScroll && x > 2);
+        wrap.classList.toggle('can-right', canScroll && x < maxScroll - 2);
+    }
+    function updateAll() {
+        document.querySelectorAll('.tab-buttons-wrap').forEach(update);
     }
     function init() {
         document.querySelectorAll('.tab-buttons-wrap').forEach(wrap => {
@@ -1191,7 +1202,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         init();
     }
-    window.addEventListener('resize', () => {
-        document.querySelectorAll('.tab-buttons-wrap').forEach(update);
-    }, { passive: true });
+    window.addEventListener('resize', updateAll, { passive: true });
+    // Re-measure when a tab/page becomes visible (clientWidth is 0 while hidden)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.nav-button') || e.target.closest('.tab-button')) {
+            setTimeout(updateAll, 50);
+        }
+    });
+    // Expose so other code can trigger a refresh after switching pages
+    window.refreshTabIndicators = updateAll;
+    // Layout may not be ready at init; re-measure shortly after load
+    setTimeout(updateAll, 300);
+    setTimeout(updateAll, 1000);
 })();

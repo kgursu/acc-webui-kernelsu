@@ -1,6 +1,6 @@
 {
-    "version": "v1.1-test3",
-    "versionCode": 9,
-    "zipUrl": "https://github.com/kgursu/acc-webui-kernelsu/releases/download/v1.1-test3/acc-webui_v1.1-test3.zip",
+    "version": "v1.1-test4",
+    "versionCode": 12,
+    "zipUrl": "https://github.com/kgursu/acc-webui-kernelsu/releases/download/v1.1-test4/acc-webui_v1.1-test4.zip",
     "changelog": "https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/changelog.md"
 }
