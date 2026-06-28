@@ -11,14 +11,15 @@ dataDir=/data/adb/$domain/${id}-data
 
 [ -f $execDir/disable -o -f $dataDir/disable ] && exit 14
 
-# wait til the lock screen is ready and give some bootloop grace period
+# wait til the lock screen is ready and give some bootloop grace period.
+# Some ROMs clear init.svc.bootanim after boot, so an empty value also means "boot done".
 slept=false
-until [ .$(getprop init.svc.bootanim 2>/dev/null) = .stopped ]; do
+until ba=$(getprop init.svc.bootanim 2>/dev/null); [ -z "$ba" ] || [ ".$ba" = .stopped ]; do
   [ -f $execDir/disable -o -f $dataDir/disable ] && exit 14
   sleep 10 && slept=true
 done
 $slept && sleep 60
-unset slept
+unset slept ba
 
 mkdir -p $TMPDIR $dataDir
 export dataDir domain execDir id TMPDIR

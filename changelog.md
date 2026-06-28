@@ -1,3 +1,6 @@
+**v1.1-test8 (versionCode 18)**
+- Daemon: fix Stop then Start failing on ROMs where init.svc.bootanim is empty after boot
+
 **v1.1-test7 (versionCode 17)**
 - WebUI: prioritize reliable absolute ACC paths to fix "inaccessible or not found" on some ROMs
 - WebUI: add Copy All button to the Prompt Log viewer
