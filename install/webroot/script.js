@@ -1197,16 +1197,16 @@ async function initializeUI(accPath) {
     async function updateDisabledSwitchesCount() {
         const el = document.getElementById('disabled-switches-count');
         if (!el) return;
-        const [excluded, hashed, working, pool] = await Promise.all([
+        const [excluded, hashed, working, pool, tested] = await Promise.all([
             readLines(EXCLUDED_FILE), readHashedNames(),
-            readLines(WORKING_SWITCHES), readLines(CH_SWITCHES)
+            readLines(WORKING_SWITCHES), readLines(CH_SWITCHES), readTestedSwitches()
         ]);
         // Build a map of switch name -> how many distinct variant lines exist for it,
         // drawn from every switch we know about (tested pool + live pool + our excluded list).
         const variantsByName = new Map();
         const allLines = new Set([
             ...working.map(stripWorkingTag).filter(Boolean),
-            ...pool, ...excluded
+            ...tested, ...pool, ...excluded
         ]);
         for (const line of allLines) {
             const n = switchName(line);
@@ -1248,12 +1248,28 @@ async function initializeUI(accPath) {
         return readLines(CH_SWITCHES);
     }
 
+    // Read every switch ACC tested from the test-output log. Lines look like
+    // "1/32: battery/charging_enabled 1 0"; we strip the "N/M: " prefix. This captures
+    // switches that failed the test too (not just the ones kept in ch-switches), which is
+    // the full pool the user wants to be able to disable. Needs one Test Switches run.
+    async function readTestedSwitches() {
+        try {
+            const r = await commandExecutor.execRaw('sh', ['-c',
+                `cat /data/adb/vr25/acc-data/logs/acc-t_output-*.log 2>/dev/null`], 8000);
+            return (r.stdout || '').split('\n')
+                .map(l => l.trim())
+                .filter(l => /^[0-9]+\/[0-9]+:\s/.test(l))
+                .map(l => l.replace(/^[0-9]+\/[0-9]+:\s+/, '').trim())
+                .filter(Boolean);
+        } catch (e) { return []; }
+    }
+
     async function loadSwitchesList() {
         const container = document.getElementById('switches-list');
         if (!container) return;
         container.textContent = 'Loading switches...';
-        const [pool, working, excluded, hashed] = await Promise.all([
-            readChSwitches(), readLines(WORKING_SWITCHES),
+        const [pool, working, tested, excluded, hashed] = await Promise.all([
+            readChSwitches(), readLines(WORKING_SWITCHES), readTestedSwitches(),
             readLines(EXCLUDED_FILE), readHashedNames()
         ]);
         const excludedSet = new Set(excluded);
@@ -1261,7 +1277,10 @@ async function initializeUI(accPath) {
         // ch-switches (via acca -s s:) is ACC's own list: ls_ch_switches patterns matched
         // against real device files, then cleaned by oem-custom.sh. working-switches.log adds
         // tested variants. Both are authoritative; acc -p is intentionally not used.
-        const all = Array.from(new Set([...workingLines, ...pool, ...excluded])).sort();
+        // Union of: ch-switches (live pool), working-switches (kept), tested (full test pool
+        // incl. failed switches), and our excluded lines. Tested is the broadest source and
+        // matches the Test Switches count once a test has been run.
+        const all = Array.from(new Set([...workingLines, ...tested, ...pool, ...excluded])).sort();
         if (all.length === 0) {
             container.textContent = 'No switches found. Run Test Switches once to populate the list.';
             return;

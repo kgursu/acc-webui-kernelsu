@@ -1,3 +1,6 @@
+**v1.1-test29 (versionCode 59)**
+- WebUI: switch list now also reads acc-t_output log, capturing every tested switch (incl. ones that failed), matching the Test Switches count
+
 **v1.1-test28 (versionCode 58)**
 - WebUI: remove Rebuild; init-mode restart left the daemon unable to detach and stopped status updates. Run Test Switches once to discover the full pool instead.
 
