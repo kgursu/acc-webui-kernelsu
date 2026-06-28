@@ -1,3 +1,9 @@
+**v1.1-test10 (versionCode 24)**
+- WebUI: add Disabled Switches count to the Config page
+- WebUI: add Enable/Disable Switches page to exclude problematic switches from Test Switches
+- WebUI: add Reset Switches to clear the exclusion list
+- Installer: service.sh removes excluded switches from the test pool on boot
+
 **v1.1-test9 (versionCode 20)**
 - WebUI: rename Maintenance tab to Service and Settings tab to UI
 - WebUI: move charging and daemon control buttons to the top of the Service page

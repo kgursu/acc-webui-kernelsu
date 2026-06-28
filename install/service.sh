@@ -41,5 +41,18 @@ fi
 
 . $execDir/setup-busybox.sh
 . $execDir/release-lock.sh
+
+# WebUI: remove user-excluded switches from the test pool so Test Switches skips them.
+_excl=$dataDir/webui-excluded-switches
+_chsw=$TMPDIR/ch-switches
+if [ -f "$_excl" ] && [ -f "$_chsw" ]; then
+  while IFS= read -r _line; do
+    [ -n "$_line" ] || continue
+    _esc=$(printf '%s' "$_line" | sed 's/[\\/&|]/\\&/g')
+    sed -i "\\|^${_esc}\$|d" "$_chsw" 2>/dev/null || :
+  done < "$_excl"
+fi
+unset _excl _chsw _line _esc
+
 [ ".$1" = .-x ] && touch $dataDir/disable
 exec start-stop-daemon -bx $execDir/${id}d.sh -S -- "$@" || exit 12

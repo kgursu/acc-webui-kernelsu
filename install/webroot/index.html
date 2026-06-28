@@ -133,6 +133,14 @@
                             <span class="status-key">Pause at:</span>
                             <span class="status-value" id="pause-at">-</span>
                         </div>
+                        <div class="status-item">
+                            <span class="status-key">Disabled Switches:</span>
+                            <span class="status-value" id="disabled-switches-count">-</span>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button id="reset-switches-btn">Reset Switches</button>
+                        <button id="enable-disable-switches-btn">Enable/Disable Switches</button>
                     </div>
                 </div>
             </div>
@@ -433,6 +441,22 @@
                     <button id="clear-prompt-log">Clear</button>
                 </div>
                 <pre id="prompt-log-output" style="margin-top: 10px; max-height: 400px; overflow-y: auto; background: #000; color: #0f0; padding: 10px; white-space: pre-wrap;">Loading...</pre>
+            </div>
+        </div>
+    </div>
+    <div id="switches-modal" class="modal">
+        <div class="modal-content large-modal">
+            <span class="close" id="close-switches">&times;</span>
+            <h2>Enable/Disable Switches</h2>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 10px;">
+                    Disabled switches are skipped during Test Switches. Turn one off if it makes the device stop charging or interferes with other hardware. Changes apply on the next boot.
+                </p>
+                <div class="button-group">
+                    <button id="refresh-switches">Refresh</button>
+                    <button id="apply-switches">Apply</button>
+                </div>
+                <div id="switches-list" style="margin-top: 12px; max-height: 50vh; overflow-y: auto;">Loading switches...</div>
             </div>
         </div>
     </div>

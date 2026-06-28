@@ -1164,6 +1164,115 @@ async function initializeUI(accPath) {
         }
     });
 
+    // --- Switch enable/disable management ---
+    // ch-switches holds the test pool (one switch per line, e.g. "battery/charging_enabled 1 0").
+    // We keep our own persistent exclusion file; service.sh removes those lines from ch-switches on boot.
+    const CH_SWITCHES = '/dev/.vr25/acc/ch-switches';
+    const EXCLUDED_FILE = '/data/adb/vr25/acc-data/webui-excluded-switches';
+
+    async function readLines(path) {
+        try {
+            const res = await commandExecutor.execRaw('sh', ['-c', `cat ${path} 2>/dev/null`], 8000);
+            return (res.stdout || '').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        } catch (e) { return []; }
+    }
+
+    async function updateDisabledSwitchesCount() {
+        const el = document.getElementById('disabled-switches-count');
+        if (!el) return;
+        const excluded = await readLines(EXCLUDED_FILE);
+        el.textContent = excluded.length === 0 ? 'None' : String(excluded.length);
+    }
+
+    async function loadSwitchesList() {
+        const container = document.getElementById('switches-list');
+        if (!container) return;
+        container.textContent = 'Loading switches...';
+        // The live pool plus any currently-excluded lines (so excluded ones still appear, unticked)
+        const [pool, excluded] = await Promise.all([readLines(CH_SWITCHES), readLines(EXCLUDED_FILE)]);
+        const excludedSet = new Set(excluded);
+        // Union: pool ∪ excluded, so a disabled switch removed from the live pool still shows
+        const all = Array.from(new Set([...pool, ...excluded])).sort();
+        if (all.length === 0) {
+            container.textContent = 'No switches found. Run Test Switches once to populate the list.';
+            return;
+        }
+        container.innerHTML = '';
+        all.forEach((line, idx) => {
+            const enabled = !excludedSet.has(line);
+            const row = document.createElement('label');
+            row.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid rgba(0,0,0,0.06); cursor:pointer; font-family:monospace; font-size:12px;';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = enabled;
+            cb.dataset.line = line;
+            cb.style.cssText = 'width:18px; height:18px; flex-shrink:0;';
+            const span = document.createElement('span');
+            span.textContent = line;
+            span.style.cssText = 'word-break:break-all;';
+            row.appendChild(cb);
+            row.appendChild(span);
+            container.appendChild(row);
+        });
+    }
+
+    async function applySwitches() {
+        const container = document.getElementById('switches-list');
+        if (!container) return;
+        const boxes = container.querySelectorAll('input[type="checkbox"]');
+        const excluded = [];
+        boxes.forEach(cb => { if (!cb.checked) excluded.push(cb.dataset.line); });
+        try {
+            // Write our exclusion file (one line per disabled switch)
+            const body = excluded.join('\n');
+            const b64 = btoa(unescape(encodeURIComponent(body + (body ? '\n' : ''))));
+            await commandExecutor.execRaw('su', ['-c',
+                `echo '${b64}' | base64 -d > ${EXCLUDED_FILE}`], 8000);
+            // Apply immediately to the live pool too: remove excluded lines from ch-switches now
+            for (const line of excluded) {
+                const esc = line.replace(/[\\/&|]/g, '\\$&');
+                await commandExecutor.execRaw('su', ['-c',
+                    `sed -i '\\|^${esc}$|d' ${CH_SWITCHES} 2>/dev/null`], 5000).catch(()=>{});
+            }
+            await updateDisabledSwitchesCount();
+            showError(`Saved. ${excluded.length} switch(es) disabled.`, 'success');
+            await logManager.info(`Switches disabled: ${excluded.length}`);
+        } catch (e) {
+            showError(`Failed to save switches: ${e}`);
+        }
+    }
+
+    const enableDisableBtn = document.getElementById('enable-disable-switches-btn');
+    if (enableDisableBtn) enableDisableBtn.addEventListener('click', () => {
+        document.getElementById('switches-modal').style.display = 'block';
+        loadSwitchesList();
+    });
+    const closeSwitches = document.getElementById('close-switches');
+    if (closeSwitches) closeSwitches.addEventListener('click', () => {
+        document.getElementById('switches-modal').style.display = 'none';
+    });
+    const refreshSwitches = document.getElementById('refresh-switches');
+    if (refreshSwitches) refreshSwitches.addEventListener('click', loadSwitchesList);
+    const applySwitchesBtn = document.getElementById('apply-switches');
+    if (applySwitchesBtn) applySwitchesBtn.addEventListener('click', applySwitches);
+
+    // Reset Switches: clear our exclusion file so all switches are testable again
+    const resetSwitchesBtn = document.getElementById('reset-switches-btn');
+    if (resetSwitchesBtn) resetSwitchesBtn.addEventListener('click', async () => {
+        if (!confirm("Re-enable all switches for testing? This clears your disabled list.")) return;
+        try {
+            await commandExecutor.execRaw('su', ['-c', `rm -f ${EXCLUDED_FILE}`], 5000);
+            await updateDisabledSwitchesCount();
+            showError("All switches re-enabled. Reboot to fully rebuild the pool.", 'success');
+            await logManager.info("Switch exclusions reset");
+        } catch (e) {
+            showError(`Failed to reset switches: ${e}`);
+        }
+    });
+
+    // Populate the Disabled Switches count on load
+    updateDisabledSwitchesCount();
+
     // Close modals when clicking outside
     window.addEventListener('click', (event) => {
         if (event.target.classList.contains('modal')) {
