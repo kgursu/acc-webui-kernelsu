@@ -600,7 +600,7 @@ button.loading::after {
 }
 
 .tab-content {
-    padding: 16px 0;
+    padding: 6px 0 16px 0;
     max-height: 60vh;
     overflow-y: auto;
     overflow-x: hidden;
@@ -1199,4 +1199,11 @@ button.loading::after {
     color: var(--text-secondary);
     font-size: 12px;
     line-height: 1.4;
+}
+
+h2.section-divider {
+    margin-top: 24px;
+    margin-bottom: 20px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
 }

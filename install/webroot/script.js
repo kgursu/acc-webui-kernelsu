@@ -1377,12 +1377,20 @@ function initializeMainTabs() {
         });
     });
 
-    // Swipe left/right to move between adjacent tabs
-    const swipeArea = document.querySelector('.main-tab-content');
+    // Swipe left/right anywhere on the page to move between adjacent tabs
+    const swipeArea = document.body;
     if (swipeArea) {
         let startX = 0, startY = 0, tracking = false;
         swipeArea.addEventListener('touchstart', (e) => {
             if (e.touches.length !== 1) { tracking = false; return; }
+            // Ignore swipes that start on the bottom nav, an open modal, or a scrollable control
+            const t = e.target;
+            if (t.closest && (t.closest('.bottom-nav') || t.closest('.modal') ||
+                t.closest('.tab-buttons') || t.closest('.log-container') ||
+                t.closest('select') || t.closest('textarea') || t.closest('input'))) {
+                tracking = false;
+                return;
+            }
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             tracking = true;
@@ -1390,6 +1398,10 @@ function initializeMainTabs() {
         swipeArea.addEventListener('touchend', (e) => {
             if (!tracking) return;
             tracking = false;
+            // Don't switch tabs while a modal is open
+            const openModal = Array.from(document.querySelectorAll('.modal'))
+                .some(m => m.style.display === 'block');
+            if (openModal) return;
             const t = e.changedTouches[0];
             const dx = t.clientX - startX;
             const dy = t.clientY - startY;

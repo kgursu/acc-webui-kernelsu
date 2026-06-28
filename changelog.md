@@ -1,3 +1,8 @@
+**v1.1-test17 (versionCode 42)**
+- WebUI: separate Configuration Settings from the buttons above with more space and a divider
+- WebUI: tighten the gap above the first config field
+- WebUI: swipe now works across the whole page, not just the card area
+
 **v1.1-test16 (versionCode 39)**
 - WebUI: raise config and daemon-status timeouts so slow devices stop failing to load
 - WebUI: add more space under section headings for consistent spacing
