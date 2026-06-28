@@ -1,3 +1,7 @@
+**v1.1-test9 (versionCode 20)**
+- WebUI: rename Maintenance tab to Service and Settings tab to UI
+- WebUI: move charging and daemon control buttons to the top of the Service page
+
 **v1.1-test8 (versionCode 18)**
 - Daemon: fix Stop then Start failing on ROMs where init.svc.bootanim is empty after boot
 
