@@ -11,13 +11,13 @@ A WebUI front-end for [VR25's Advanced Charging Controller (ACC)](https://github
 
 | Status | Config |
 |:---:|:---:|
-| ![Status](docs/screenshots/01-status.png) | ![Config](docs/screenshots/02-config.png) |
+| ![Status](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/01-status.png) | ![Config](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/02-config.png) |
 | **Reset Switches** | **Enable/Disable Switches** |
-| ![Reset Switches](docs/screenshots/03-reset-switches.png) | ![Enable/Disable Switches](docs/screenshots/04-enable-disable-switches.png) |
+| ![Reset Switches](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/03-reset-switches.png) | ![Enable/Disable Switches](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/04-enable-disable-switches.png) |
 | **Logs** | **Service** |
-| ![Logs](docs/screenshots/05-logs.png) | ![Service](docs/screenshots/06-service.png) |
+| ![Logs](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/05-logs.png) | ![Service](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/06-service.png) |
 | **UI** | |
-| ![UI](docs/screenshots/07-ui.png) | |
+| ![UI](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/07-ui.png) | |
 
 ### Tablet / landscape
 
@@ -25,7 +25,7 @@ The interface adapts to wider screens.
 
 | Status | Config |
 |:---:|:---:|
-| ![Tablet Status](docs/screenshots/tablet-01-status.png) | ![Tablet Config](docs/screenshots/tablet-02-config.png) |
+| ![Tablet Status](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/tablet-01-status.png) | ![Tablet Config](https://raw.githubusercontent.com/kgursu/acc-webui-kernelsu/dev/docs/screenshots/tablet-02-config.png) |
 
 ## Install
 
