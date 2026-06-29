@@ -3,3 +3,19 @@
 
 # Denote all files that are truly binary and should not be modified.
 bin/** binary
+
+# Images and archives are binary; never apply text/EOL conversion (this would
+# corrupt PNG headers, e.g. stripping CR from the 8-byte signature).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.zip binary
+*.tgz binary
+*.gz binary
+*.apk binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
