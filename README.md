@@ -1,3 +1,38 @@
+# ACC WebUI — APatch / FolkPatch Compatible
+
+[![Latest release](https://img.shields.io/github/v/release/kgursu/acc-webui-kernelsu?include_prereleases&label=release)](https://github.com/kgursu/acc-webui-kernelsu/releases)
+[![Downloads](https://img.shields.io/github/downloads/kgursu/acc-webui-kernelsu/total?label=downloads)](https://github.com/kgursu/acc-webui-kernelsu/releases)
+[![License](https://img.shields.io/github/license/kgursu/acc-webui-kernelsu?label=license)](License.md)
+[![Stars](https://img.shields.io/github/stars/kgursu/acc-webui-kernelsu?style=flat&label=stars)](https://github.com/kgursu/acc-webui-kernelsu/stargazers)
+
+A WebUI front-end for [VR25's Advanced Charging Controller (ACC)](https://github.com/VR-25/acc), forked from [Farrukh2002/acc-webui-kernelsu](https://github.com/Farrukh2002/acc-webui-kernelsu) and made to work on APatch and FolkPatch in addition to KernelSU and Magisk. It manages charge limits, charging switches, the ACC daemon, and logs from a browser-based interface.
+
+## Screenshots
+
+| Status | Config |
+|:---:|:---:|
+| ![Status](docs/screenshots/01-status.png) | ![Config](docs/screenshots/02-config.png) |
+| **Reset Switches** | **Enable/Disable Switches** |
+| ![Reset Switches](docs/screenshots/03-reset-switches.png) | ![Enable/Disable Switches](docs/screenshots/04-enable-disable-switches.png) |
+| **Logs** | **Service** |
+| ![Logs](docs/screenshots/05-logs.png) | ![Service](docs/screenshots/06-service.png) |
+| **UI** | |
+| ![UI](docs/screenshots/07-ui.png) | |
+
+### Tablet / landscape
+
+The interface adapts to wider screens.
+
+| Status | Config |
+|:---:|:---:|
+| ![Tablet Status](docs/screenshots/tablet-01-status.png) | ![Tablet Config](docs/screenshots/tablet-02-config.png) |
+
+## Install
+
+Download the latest `acc-webui_*.zip` from [Releases](https://github.com/kgursu/acc-webui-kernelsu/releases) and flash it in your root manager (APatch, FolkPatch, KernelSU, or Magisk). The WebUI opens from your root manager's module page.
+
+---
+
 # Advanced Charging Controller (ACC)
 
 
